@@ -5,28 +5,28 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Authorization interface {
-	CreateUser(user models.User) (int64, error)
-}
+type (
+	Authorization interface {
+		CreateUser(user models.User) (int64, error)
+		GetUser(email, password string) (models.User, error)
+	}
 
-type Project interface {
+	Project interface {
+	}
 
-}
+	Task interface {
+	}
 
-type Task interface {
+	Subtask interface {
+	}
 
-}
-
-type Subtask interface {
-
-}
-
-type Repository struct {
-	Authorization
-	Project
-	Task
-	Subtask
-}
+	Repository struct {
+		Authorization
+		Project
+		Task
+		Subtask
+	}
+)
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{

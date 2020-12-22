@@ -9,3 +9,7 @@ DROP TABLE tasks;
 DROP TABLE subtasks;
 
 DROP TABLE users;
+
+DROP TABLE importance_status;
+
+DROP TABLE progress_status;

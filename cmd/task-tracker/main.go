@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/LevOrlov5404/task-tracker"
 	"github.com/LevOrlov5404/task-tracker/pkg/handler"
@@ -35,14 +38,33 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("failed to connect to db: %s", err.Error())
 	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			logrus.Errorf("error occurred on db connection closing: %s", err.Error())
+		}
+	}()
 
 	repo := repository.NewRepository(db)
 	services := service.NewService(repo)
 	handlers := handler.NewHandler(services)
 
 	srv := new(task.Server)
-	if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
-		logrus.Fatalf("error occured while running http server: %s", err.Error())
+	go func() {
+		if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
+			logrus.Fatalf("error occurred while running http server: %s", err.Error())
+		}
+	}()
+
+	logrus.Print("TaskTracker started")
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	logrus.Print("TaskTracker shutting down")
+
+	if err := srv.Shutdown(context.Background()); err != nil {
+		logrus.Errorf("error occurred on shutting down: %s", err.Error())
 	}
 }
 

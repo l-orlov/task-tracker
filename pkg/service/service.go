@@ -5,28 +5,29 @@ import (
 	"github.com/LevOrlov5404/task-tracker/pkg/repository"
 )
 
-type Authorization interface {
-	CreateUser(user models.User) (int64, error)
-}
+type (
+	Authorization interface {
+		CreateUser(user models.User) (int64, error)
+		GenerateToken(email, password string) (string, error)
+		ParseToken(token string) (int64, error)
+	}
 
-type Project interface {
+	Project interface {
+	}
 
-}
+	Task interface {
+	}
 
-type Task interface {
+	Subtask interface {
+	}
 
-}
-
-type Subtask interface {
-
-}
-
-type Service struct {
-	Authorization
-	Project
-	Task
-	Subtask
-}
+	Service struct {
+		Authorization
+		Project
+		Task
+		Subtask
+	}
+)
 
 func NewService(repo *repository.Repository) *Service {
 	return &Service{

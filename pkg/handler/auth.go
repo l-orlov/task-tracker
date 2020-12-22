@@ -7,17 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h * Handler) signUp(c *gin.Context) {
+func (h *Handler) signUp(c *gin.Context) {
 	var user models.User
 
 	if err := c.BindJSON(&user); err != nil {
-		newErrorRespnse(c, http.StatusBadRequest, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	id, err := h.services.CreateUser(user)
+	id, err := h.services.Authorization.CreateUser(user)
 	if err != nil {
-		newErrorRespnse(c, http.StatusInternalServerError, err.Error())
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -26,6 +26,21 @@ func (h * Handler) signUp(c *gin.Context) {
 	})
 }
 
-func (h * Handler) signIn(c *gin.Context) {
+func (h *Handler) signIn(c *gin.Context) {
+	var user models.UserToSignIn
 
+	if err := c.BindJSON(&user); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	token, err := h.services.Authorization.GenerateToken(user.Email, user.Password)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"token": token,
+	})
 }

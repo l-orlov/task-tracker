@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -13,6 +14,8 @@ const (
 	subtasksTable      = "subtasks"
 	projectsTasksTable = "projects_tasks"
 	tasksSubtasksTable = "tasks_subtasks"
+
+	dbTimeout = 3 * time.Second
 )
 
 type Config struct {
