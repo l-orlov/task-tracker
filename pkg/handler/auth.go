@@ -9,13 +9,12 @@ import (
 
 func (h *Handler) signUp(c *gin.Context) {
 	var user models.User
-
 	if err := c.BindJSON(&user); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	id, err := h.services.Authorization.CreateUser(user)
+	id, err := h.services.Authorization.CreateUser(c, user)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -28,13 +27,12 @@ func (h *Handler) signUp(c *gin.Context) {
 
 func (h *Handler) signIn(c *gin.Context) {
 	var user models.UserToSignIn
-
 	if err := c.BindJSON(&user); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	token, err := h.services.Authorization.GenerateToken(user.Email, user.Password)
+	token, err := h.services.Authorization.GenerateToken(c, user.Email, user.Password)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

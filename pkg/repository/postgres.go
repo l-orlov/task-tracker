@@ -8,12 +8,14 @@ import (
 )
 
 const (
-	usersTable         = "users"
-	projectsTable      = "projects"
-	tasksTable         = "tasks"
-	subtasksTable      = "subtasks"
-	projectsTasksTable = "projects_tasks"
-	tasksSubtasksTable = "tasks_subtasks"
+	usersTable            = "users"
+	importanceStatusTable = "importance_status"
+	progressStatusTable   = "progress_status"
+	projectsTable         = "projects"
+	tasksTable            = "tasks"
+	subtasksTable         = "subtasks"
+	projectsTasksTable    = "projects_tasks"
+	tasksSubtasksTable    = "tasks_subtasks"
 
 	dbTimeout = 3 * time.Second
 )

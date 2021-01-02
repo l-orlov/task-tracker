@@ -45,7 +45,7 @@ func main() {
 	}()
 
 	repo := repository.NewRepository(db)
-	services := service.NewService(repo)
+	services := service.NewService(repo, os.Getenv("SALT"), os.Getenv("SIGNING_KEY"))
 	handlers := handler.NewHandler(services)
 
 	srv := new(task.Server)

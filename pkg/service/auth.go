@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/sha1"
 	"errors"
 	"fmt"
@@ -12,14 +13,14 @@ import (
 )
 
 const (
-	salt       = "djio@spHq%wslw7&spw^aolA1212,alza"
-	signingKey = "jsaZoekcp[wqm;sxma#ndm^w99qqMqlms{'ls;c"
-	tokenTTL   = 12 * time.Hour
+	tokenTTL = 12 * time.Hour
 )
 
 type (
 	AuthService struct {
-		repo repository.Authorization
+		repo       repository.Authorization
+		salt       string
+		signingKey string
 	}
 
 	tokenClaims struct {
@@ -28,17 +29,21 @@ type (
 	}
 )
 
-func NewAuthService(repo repository.Authorization) *AuthService {
-	return &AuthService{repo: repo}
+func NewAuthService(repo repository.Authorization, salt, signingKey string) *AuthService {
+	return &AuthService{
+		repo:       repo,
+		salt:       salt,
+		signingKey: signingKey,
+	}
 }
 
-func (s *AuthService) CreateUser(user models.User) (int64, error) {
-	user.Password = generatePasswordHash(user.Password)
-	return s.repo.CreateUser(user)
+func (s *AuthService) CreateUser(ctx context.Context, user models.User) (int64, error) {
+	user.Password = generatePasswordHash(user.Password, s.salt)
+	return s.repo.CreateUser(ctx, user)
 }
 
-func (s *AuthService) GenerateToken(email, password string) (string, error) {
-	user, err := s.repo.GetUser(email, generatePasswordHash(password))
+func (s *AuthService) GenerateToken(ctx context.Context, email, password string) (string, error) {
+	user, err := s.repo.GetUser(ctx, email, generatePasswordHash(password, s.salt))
 	if err != nil {
 		return "", err
 	}
@@ -51,7 +56,7 @@ func (s *AuthService) GenerateToken(email, password string) (string, error) {
 		UserID: user.ID,
 	})
 
-	return token.SignedString([]byte(signingKey))
+	return token.SignedString([]byte(s.signingKey))
 }
 
 func (s *AuthService) ParseToken(accessToken string) (int64, error) {
@@ -60,7 +65,7 @@ func (s *AuthService) ParseToken(accessToken string) (int64, error) {
 			return nil, errors.New("invalid signing method")
 		}
 
-		return []byte(signingKey), nil
+		return []byte(s.signingKey), nil
 	})
 	if err != nil {
 		return 0, err
@@ -74,7 +79,7 @@ func (s *AuthService) ParseToken(accessToken string) (int64, error) {
 	return claims.UserID, nil
 }
 
-func generatePasswordHash(password string) string {
+func generatePasswordHash(password, salt string) string {
 	hash := sha1.New()
 	hash.Write([]byte(password))
 

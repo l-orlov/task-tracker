@@ -4,8 +4,7 @@ CREATE TABLE users
     first_name    varchar(255) not null,
     last_name     varchar(255) not null,
     email         varchar(255) not null,
-    password_hash varchar(255) not null,
-    is_active     boolean      not null
+    password_hash varchar(255) not null
 );
 
 CREATE TABLE importance_status
