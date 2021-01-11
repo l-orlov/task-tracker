@@ -18,55 +18,65 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	auth := router.Group("/auth")
 	{
-		auth.POST("/sigh-up", h.signUp)
-		auth.POST("/sigh-in", h.signIn)
+		auth.POST("/sigh-up", h.CreateUser)
+		auth.POST("/sigh-in", h.SignIn)
 	}
 
-	api := router.Group("/api", h.userIdentity)
+	api := router.Group("/api/v1", h.UserIdentity)
 	{
+		users := api.Group("/users")
+		{
+			users.POST("/", h.CreateUser)
+			users.GET("/", h.GetAllUsers)
+			users.GET("/by-id/:id", h.GetUserByID)
+			users.GET("/by-email-password", h.GetUserByEmailPassword)
+			users.PUT("/:id", h.UpdateUser)
+			users.DELETE("/:id", h.DeleteUser)
+		}
+
 		importanceStatuses := api.Group("/importance")
 		{
-			importanceStatuses.POST("/", h.createImportanceStatus)
-			importanceStatuses.GET("/", h.getAllImportanceStatuses)
-			importanceStatuses.GET("/:id", h.getImportanceStatusByID)
-			importanceStatuses.PUT("/:id", h.updateImportanceStatus)
-			importanceStatuses.DELETE("/:id", h.deleteImportanceStatus)
+			importanceStatuses.POST("/", h.CreateImportanceStatus)
+			importanceStatuses.GET("/", h.GetAllImportanceStatuses)
+			importanceStatuses.GET("/:id", h.GetImportanceStatusByID)
+			importanceStatuses.PUT("/:id", h.UpdateImportanceStatus)
+			importanceStatuses.DELETE("/:id", h.DeleteImportanceStatus)
 		}
 
 		progressStatuses := api.Group("/progress")
 		{
-			progressStatuses.POST("/", h.createProgressStatus)
-			progressStatuses.GET("/", h.getAllProgressStatuses)
-			progressStatuses.GET("/:id", h.getProgressStatusByID)
-			progressStatuses.PUT("/:id", h.updateProgressStatus)
-			progressStatuses.DELETE("/:id", h.deleteProgressStatus)
+			progressStatuses.POST("/", h.CreateProgressStatus)
+			progressStatuses.GET("/", h.GetAllProgressStatuses)
+			progressStatuses.GET("/:id", h.GetProgressStatusByID)
+			progressStatuses.PUT("/:id", h.UpdateProgressStatus)
+			progressStatuses.DELETE("/:id", h.DeleteProgressStatus)
 		}
 
 		projects := api.Group("/projects")
 		{
-			projects.POST("/", h.createProject)
-			projects.GET("/", h.getAllProjects)
-			projects.GET("/:id", h.getProjectByID)
-			projects.PUT("/:id", h.updateProject)
-			projects.DELETE("/:id", h.deleteProject)
+			projects.POST("/", h.CreateProject)
+			projects.GET("/", h.GetAllProjects)
+			projects.GET("/:id", h.GetProjectByID)
+			projects.PUT("/:id", h.UpdateProject)
+			projects.DELETE("/:id", h.DeleteProject)
 		}
 
 		tasks := api.Group("tasks")
 		{
-			tasks.POST("/", h.createTask)
-			tasks.GET("/", h.getAllTasks)
-			tasks.GET("/:id", h.getTaskByID)
-			tasks.PUT("/:id", h.updateTask)
-			tasks.DELETE("/:id", h.deleteTask)
+			tasks.POST("/", h.CreateTask)
+			tasks.GET("/", h.GetAllTasks)
+			tasks.GET("/:id", h.GetTaskByID)
+			tasks.PUT("/:id", h.UpdateTask)
+			tasks.DELETE("/:id", h.DeleteTask)
 		}
 
 		subtasks := api.Group("subtasks")
 		{
-			subtasks.POST("/", h.createSubtask)
-			subtasks.GET("/", h.getAllSubtasks)
-			subtasks.GET("/:id", h.getSubtaskByID)
-			subtasks.PUT("/:id", h.updateSubtask)
-			subtasks.DELETE("/:id", h.deleteSubtask)
+			subtasks.POST("/", h.CreateSubtask)
+			subtasks.GET("/", h.GetAllSubtasks)
+			subtasks.GET("/:id", h.GetSubtaskByID)
+			subtasks.PUT("/:id", h.UpdateSubtask)
+			subtasks.DELETE("/:id", h.DeleteSubtask)
 		}
 	}
 

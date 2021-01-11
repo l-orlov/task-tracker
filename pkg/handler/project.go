@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (h *Handler) createProject(c *gin.Context) {
+func (h *Handler) CreateProject(c *gin.Context) {
 	var project models.ProjectToCreate
 	if err := c.BindJSON(&project); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -24,7 +24,7 @@ func (h *Handler) createProject(c *gin.Context) {
 	})
 }
 
-func (h *Handler) getAllProjects(c *gin.Context) {
+func (h *Handler) GetAllProjects(c *gin.Context) {
 	items, err := h.services.Project.GetAll(c)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -34,14 +34,19 @@ func (h *Handler) getAllProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, items)
 }
 
-func (h *Handler) getProjectByID(c *gin.Context) {
+func (h *Handler) GetProjectByID(c *gin.Context) {
+	//id, err := strconv.Atoi(c.Param("id"))
+	//if err != nil {
+	//	newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+	//	return
+	//}
 
 }
 
-func (h *Handler) updateProject(c *gin.Context) {
+func (h *Handler) UpdateProject(c *gin.Context) {
 
 }
 
-func (h *Handler) deleteProject(c *gin.Context) {
+func (h *Handler) DeleteProject(c *gin.Context) {
 
 }

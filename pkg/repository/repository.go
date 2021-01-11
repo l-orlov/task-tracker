@@ -7,9 +7,13 @@ import (
 )
 
 type (
-	Authorization interface {
-		CreateUser(ctx context.Context, user models.User) (int64, error)
-		GetUser(ctx context.Context, email, password string) (models.User, error)
+	User interface {
+		CreateUser(ctx context.Context, user models.UserToCreate) (int64, error)
+		GetUserByEmailPassword(ctx context.Context, email, password string) (models.UserToGet, error)
+		GetUserByID(ctx context.Context, id int64) (models.UserToGet, error)
+		UpdateUser(ctx context.Context, id int64, user models.UserToCreate) error
+		GetAllUsers(ctx context.Context) ([]models.UserToGet, error)
+		DeleteUser(ctx context.Context, id int64) error
 	}
 
 	ImportanceStatus interface {
@@ -32,7 +36,7 @@ type (
 	}
 
 	Repository struct {
-		Authorization
+		User
 		ImportanceStatus
 		ProgressStatus
 		Project
@@ -43,7 +47,7 @@ type (
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
-		Authorization:    NewAuthPostgres(db),
+		User:             NewUserPostgres(db),
 		ImportanceStatus: NewImportanceStatusPostgres(db),
 		ProgressStatus:   NewProgressStatusPostgres(db),
 		Project:          NewProjectPostgres(db),
