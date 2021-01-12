@@ -20,10 +20,18 @@ type (
 
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (models.Status, error)
+		Update(ctx context.Context, id int64, status models.StatusToCreate) error
+		GetAll(ctx context.Context) ([]models.Status, error)
+		Delete(ctx context.Context, id int64) error
 	}
 
 	ProgressStatus interface {
 		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (models.Status, error)
+		Update(ctx context.Context, id int64, status models.StatusToCreate) error
+		GetAll(ctx context.Context) ([]models.Status, error)
+		Delete(ctx context.Context, id int64) error
 	}
 
 	Project interface {

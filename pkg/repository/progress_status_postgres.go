@@ -33,3 +33,55 @@ func (r *ProgressStatusPostgres) Create(ctx context.Context, status models.Statu
 
 	return id, nil
 }
+
+func (r *ProgressStatusPostgres) GetByID(ctx context.Context, id int64) (models.Status, error) {
+	query := fmt.Sprintf("SELECT id, name FROM %s WHERE id=$1", progressStatusTable)
+	var status models.Status
+
+	dbCtx, cancel := context.WithTimeout(ctx, dbTimeout)
+	defer cancel()
+
+	err := r.db.GetContext(dbCtx, &status, query, id)
+
+	return status, err
+}
+
+func (r *ProgressStatusPostgres) Update(ctx context.Context, id int64, status models.StatusToCreate) error {
+	query := fmt.Sprintf("UPDATE %s SET name = $1 WHERE id = $2", progressStatusTable)
+
+	dbCtx, cancel := context.WithTimeout(ctx, dbTimeout)
+	defer cancel()
+
+	_, err := r.db.ExecContext(dbCtx, query, status.Name, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *ProgressStatusPostgres) GetAll(ctx context.Context) ([]models.Status, error) {
+	query := fmt.Sprintf("SELECT id, name FROM %s", progressStatusTable)
+	var statuses []models.Status
+
+	dbCtx, cancel := context.WithTimeout(ctx, dbTimeout)
+	defer cancel()
+
+	err := r.db.SelectContext(dbCtx, &statuses, query)
+
+	return statuses, err
+}
+
+func (r *ProgressStatusPostgres) Delete(ctx context.Context, id int64) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", progressStatusTable)
+
+	dbCtx, cancel := context.WithTimeout(ctx, dbTimeout)
+	defer cancel()
+
+	_, err := r.db.ExecContext(dbCtx, query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
