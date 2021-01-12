@@ -35,6 +35,11 @@ type (
 	}
 
 	Task interface {
+		CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error)
+		GetTaskByID(ctx context.Context, id int64) (models.Task, error)
+		UpdateTask(ctx context.Context, id int64, task models.TaskToUpdate) error
+		GetAllTasksToProject(ctx context.Context, id int64) ([]models.Task, error)
+		DeleteTask(ctx context.Context, id int64) error
 	}
 
 	Subtask interface {
@@ -56,5 +61,6 @@ func NewService(repo *repository.Repository, salt, signingKey string) *Service {
 		ImportanceStatus: NewImportanceStatusService(repo.ImportanceStatus),
 		ProgressStatus:   NewProgressStatusService(repo.ProgressStatus),
 		Project:          NewProjectService(repo.Project),
+		Task:             NewTaskService(repo.Task),
 	}
 }

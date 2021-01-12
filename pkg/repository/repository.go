@@ -33,6 +33,11 @@ type (
 	}
 
 	Task interface {
+		CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error)
+		GetTaskByID(ctx context.Context, id int64) (models.Task, error)
+		UpdateTask(ctx context.Context, id int64, task models.TaskToUpdate) error
+		GetAllTasksToProject(ctx context.Context, id int64) ([]models.Task, error)
+		DeleteTask(ctx context.Context, id int64) error
 	}
 
 	Subtask interface {
@@ -54,5 +59,6 @@ func NewRepository(db *sqlx.DB) *Repository {
 		ImportanceStatus: NewImportanceStatusPostgres(db),
 		ProgressStatus:   NewProgressStatusPostgres(db),
 		Project:          NewProjectPostgres(db),
+		Task:             NewTaskPostgres(db),
 	}
 }
