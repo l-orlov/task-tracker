@@ -16,7 +16,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// test
 func main() {
 	logrus.SetFormatter(new(logrus.JSONFormatter))
 
