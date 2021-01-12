@@ -25,8 +25,11 @@ type (
 	}
 
 	Project interface {
-		Create(ctx context.Context, project models.ProjectToCreate) (int64, error)
-		GetAll(ctx context.Context) ([]models.Project, error)
+		CreateProject(ctx context.Context, project models.ProjectToCreate) (int64, error)
+		GetProjectByID(ctx context.Context, id int64) (models.Project, error)
+		UpdateProject(ctx context.Context, id int64, project models.ProjectToUpdate) error
+		GetAllProjects(ctx context.Context) ([]models.Project, error)
+		DeleteProject(ctx context.Context, id int64) error
 	}
 
 	Task interface {
