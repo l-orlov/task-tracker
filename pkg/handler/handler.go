@@ -72,8 +72,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 		subtasks := api.Group("subtasks")
 		{
-			subtasks.POST("/", h.CreateSubtask)
-			subtasks.GET("/", h.GetAllSubtasks)
+			subtasks.POST("/", h.CreateSubtaskToTask)
+			subtasks.GET("/", h.GetAllSubtasksToTask)
 			subtasks.GET("/:id", h.GetSubtaskByID)
 			subtasks.PUT("/:id", h.UpdateSubtask)
 			subtasks.DELETE("/:id", h.DeleteSubtask)

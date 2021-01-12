@@ -43,6 +43,11 @@ type (
 	}
 
 	Subtask interface {
+		CreateSubtaskToTask(ctx context.Context, taskID int64, subtask models.SubtaskToCreate) (int64, error)
+		GetSubtaskByID(ctx context.Context, id int64) (models.Subtask, error)
+		UpdateSubtask(ctx context.Context, id int64, subtask models.SubtaskToUpdate) error
+		GetAllSubtasksToTask(ctx context.Context, id int64) ([]models.Subtask, error)
+		DeleteSubtask(ctx context.Context, id int64) error
 	}
 
 	Service struct {
@@ -62,5 +67,6 @@ func NewService(repo *repository.Repository, salt, signingKey string) *Service {
 		ProgressStatus:   NewProgressStatusService(repo.ProgressStatus),
 		Project:          NewProjectService(repo.Project),
 		Task:             NewTaskService(repo.Task),
+		Subtask:          NewSubtaskService(repo.Subtask),
 	}
 }
