@@ -84,6 +84,22 @@ func (h *Handler) GetAllSubtasksToTask(c *gin.Context) {
 	c.JSON(http.StatusOK, subtasks)
 }
 
+func (h *Handler) GetAllSubtasksWithParameters(c *gin.Context) {
+	var params models.SubtaskParams
+	if err := c.BindJSON(&params); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	subtasks, err := h.services.Subtask.GetAllSubtasksWithParameters(c, params)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, subtasks)
+}
+
 func (h *Handler) DeleteSubtask(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

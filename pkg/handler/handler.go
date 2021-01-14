@@ -56,7 +56,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		{
 			projects.POST("/", h.CreateProject)
 			projects.GET("/", h.GetAllProjects)
-			projects.GET("/:id", h.GetProjectByID)
+			projects.GET("/with-params", h.GetAllProjectsWithParameters)
+			projects.GET("/by-id/:id", h.GetProjectByID)
 			projects.PUT("/:id", h.UpdateProject)
 			projects.DELETE("/:id", h.DeleteProject)
 		}
@@ -65,7 +66,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		{
 			tasks.POST("/", h.CreateTaskToProject)
 			tasks.GET("/", h.GetAllTasksToProject)
-			tasks.GET("/:id", h.GetTaskByID)
+			tasks.GET("/with-params", h.GetAllTasksWithParameters)
+			tasks.GET("/by-id/:id", h.GetTaskByID)
 			tasks.PUT("/:id", h.UpdateTask)
 			tasks.DELETE("/:id", h.DeleteTask)
 		}
@@ -74,9 +76,15 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		{
 			subtasks.POST("/", h.CreateSubtaskToTask)
 			subtasks.GET("/", h.GetAllSubtasksToTask)
-			subtasks.GET("/:id", h.GetSubtaskByID)
+			subtasks.GET("/with-params", h.GetAllSubtasksWithParameters)
+			subtasks.GET("/by-id/:id", h.GetSubtaskByID)
 			subtasks.PUT("/:id", h.UpdateSubtask)
 			subtasks.DELETE("/:id", h.DeleteSubtask)
+		}
+
+		reports := api.Group("reports")
+		{
+			reports.GET("/projects-tasks-subtasks", h.GetAllProjectsWithTasksSubtasks)
 		}
 	}
 

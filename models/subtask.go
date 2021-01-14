@@ -1,7 +1,7 @@
 package models
 
 type (
-	TaskToCreate struct {
+	SubtaskToCreate struct {
 		Title              string `json:"title" binding:"required"`
 		Description        string `json:"description"`
 		AssigneeID         int64  `json:"assigneeId" binding:"required"`
@@ -9,7 +9,7 @@ type (
 		ProgressStatusID   int64  `json:"progressStatusId" binding:"required"`
 	}
 
-	TaskToUpdate struct {
+	SubtaskToUpdate struct {
 		Title              string `json:"title" binding:"required"`
 		Description        string `json:"description"`
 		CreationDate       string `json:"creationDate" binding:"required"`
@@ -18,7 +18,7 @@ type (
 		ProgressStatusID   int64  `json:"progressStatusId" binding:"required"`
 	}
 
-	Task struct {
+	Subtask struct {
 		ID                 int64  `json:"id" db:"id"`
 		Title              string `json:"title" db:"title"`
 		Description        string `json:"description" db:"description"`
@@ -28,7 +28,7 @@ type (
 		ProgressStatusID   int64  `json:"progressStatusId" db:"progress_status_id"`
 	}
 
-	TaskParams struct {
+	SubtaskParams struct {
 		ID                 *int64  `json:"id"`
 		Title              *string `json:"title"`
 		Description        *string `json:"description"`

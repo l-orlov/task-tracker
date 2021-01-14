@@ -30,6 +30,10 @@ func (s *TaskService) GetAllTasksToProject(ctx context.Context, id int64) ([]mod
 	return s.repo.GetAllTasksToProject(ctx, id)
 }
 
+func (s *TaskService) GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error) {
+	return s.repo.GetAllTasksWithParameters(ctx, params)
+}
+
 func (s *TaskService) DeleteTask(ctx context.Context, id int64) error {
 	return s.repo.DeleteTask(ctx, id)
 }

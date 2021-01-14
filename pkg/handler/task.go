@@ -84,6 +84,22 @@ func (h *Handler) GetAllTasksToProject(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
+func (h *Handler) GetAllTasksWithParameters(c *gin.Context) {
+	var params models.TaskParams
+	if err := c.BindJSON(&params); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tasks, err := h.services.Task.GetAllTasksWithParameters(c, params)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, tasks)
+}
+
 func (h *Handler) DeleteTask(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

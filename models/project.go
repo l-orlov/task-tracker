@@ -1,7 +1,7 @@
 package models
 
 type (
-	TaskToCreate struct {
+	ProjectToCreate struct {
 		Title              string `json:"title" binding:"required"`
 		Description        string `json:"description"`
 		AssigneeID         int64  `json:"assigneeId" binding:"required"`
@@ -9,7 +9,7 @@ type (
 		ProgressStatusID   int64  `json:"progressStatusId" binding:"required"`
 	}
 
-	TaskToUpdate struct {
+	ProjectToUpdate struct {
 		Title              string `json:"title" binding:"required"`
 		Description        string `json:"description"`
 		CreationDate       string `json:"creationDate" binding:"required"`
@@ -18,7 +18,7 @@ type (
 		ProgressStatusID   int64  `json:"progressStatusId" binding:"required"`
 	}
 
-	Task struct {
+	Project struct {
 		ID                 int64  `json:"id" db:"id"`
 		Title              string `json:"title" db:"title"`
 		Description        string `json:"description" db:"description"`
@@ -28,7 +28,7 @@ type (
 		ProgressStatusID   int64  `json:"progressStatusId" db:"progress_status_id"`
 	}
 
-	TaskParams struct {
+	ProjectParams struct {
 		ID                 *int64  `json:"id"`
 		Title              *string `json:"title"`
 		Description        *string `json:"description"`
@@ -36,5 +36,17 @@ type (
 		AssigneeID         *int64  `json:"assigneeId"`
 		ImportanceStatusID *int64  `json:"importanceStatusId"`
 		ProgressStatusID   *int64  `json:"progressStatusId"`
+	}
+
+	ProjectWithTasksSubtasks struct {
+		ID                 int64     `json:"id"`
+		Title              string    `json:"title"`
+		Description        string    `json:"description"`
+		CreationDate       string    `json:"creationDate"`
+		AssigneeID         int64     `json:"assigneeId"`
+		ImportanceStatusID int64     `json:"importanceStatusId"`
+		ProgressStatusID   int64     `json:"progressStatusId"`
+		Tasks              []Task    `json:"tasks"`
+		Subtasks           []Subtask `json:"subtasks"`
 	}
 )

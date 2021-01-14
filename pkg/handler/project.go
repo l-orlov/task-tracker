@@ -72,6 +72,22 @@ func (h *Handler) GetAllProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, projects)
 }
 
+func (h *Handler) GetAllProjectsWithParameters(c *gin.Context) {
+	var params models.ProjectParams
+	if err := c.BindJSON(&params); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	projects, err := h.services.Project.GetAllProjectsWithParameters(c, params)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, projects)
+}
+
 func (h *Handler) DeleteProject(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 )
 
 type ProgressStatusService struct {
-	repo repository.ImportanceStatus
+	repo repository.ProgressStatus
 }
 
 func NewProgressStatusService(repo repository.ProgressStatus) *ProgressStatusService {

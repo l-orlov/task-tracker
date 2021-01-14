@@ -29,7 +29,7 @@ func (r *TaskPostgres) CreateTaskToProject(ctx context.Context, projectID int64,
 	}
 	defer tx.Rollback()
 
-	row := tx.QueryRowContext(dbCtx, taskCreateQuery, task.Title, task.Description, time.Now(), task.AssigneeID, task.ImportanceStatusID, task.ProgressStatusID)
+	row := tx.QueryRowContext(dbCtx, taskCreateQuery, task.Title, task.Description, time.Now().Format(time.RFC3339), task.AssigneeID, task.ImportanceStatusID, task.ProgressStatusID)
 	if err := row.Err(); err != nil {
 		return 0, err
 	}
@@ -85,6 +85,40 @@ func (r *TaskPostgres) GetAllTasksToProject(ctx context.Context, projectID int64
 	defer cancel()
 
 	err := r.db.SelectContext(dbCtx, &tasks, query, projectID)
+
+	if tasks == nil {
+		return []models.Task{}, nil
+	}
+
+	return tasks, err
+}
+
+func (r *TaskPostgres) GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error) {
+	query := fmt.Sprintf(`SELECT id, title, description, creation_date, assignee_id, importance_status_id, progress_status_id
+		FROM %s
+		WHERE (id = $1 OR $1 is null) AND (title ILIKE $2 OR $2 is null) AND (description ILIKE $3 OR $3 is null) AND (creation_date = $4 OR $4 is null)
+		AND (assignee_id = $5 OR $5 is null) AND (importance_status_id = $6 OR $6 is null) AND (progress_status_id = $7 OR $7 is null)
+		ORDER BY id ASC`, tasksTable)
+
+	if params.Title != nil {
+		*params.Title = "%%" + *params.Title + "%%"
+	}
+
+	if params.Description != nil {
+		*params.Description = "%%" + *params.Description + "%%"
+	}
+
+	var tasks []models.Task
+
+	dbCtx, cancel := context.WithTimeout(ctx, dbTimeout)
+	defer cancel()
+
+	err := r.db.SelectContext(dbCtx, &tasks, query, params.ID, params.Title, params.Description,
+		params.CreationDate, params.AssigneeID, params.ImportanceStatusID, params.ProgressStatusID)
+
+	if tasks == nil {
+		return []models.Task{}, nil
+	}
 
 	return tasks, err
 }
