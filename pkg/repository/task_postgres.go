@@ -77,7 +77,8 @@ func (r *TaskPostgres) UpdateTask(ctx context.Context, id int64, task models.Tas
 }
 
 func (r *TaskPostgres) GetAllTasksToProject(ctx context.Context, projectID int64) ([]models.Task, error) {
-	query := fmt.Sprintf(`SELECT ts.id, ts.title, ts.description, ts.creation_date, ts.assignee_id, ts.importance_status_id, ts.progress_status_id
+	query := fmt.Sprintf(`SELECT ts.id, ts.title, ts.description, ts.creation_date,
+		ts.assignee_id, ts.importance_status_id, ts.progress_status_id
 		FROM %s as pts inner join %s as ts on pts.task_id = ts.id where pts.project_id = $1`, projectsTasksTable, tasksTable)
 	var tasks []models.Task
 
@@ -118,6 +119,24 @@ func (r *TaskPostgres) GetAllTasksWithParameters(ctx context.Context, params mod
 
 	if tasks == nil {
 		return []models.Task{}, nil
+	}
+
+	return tasks, err
+}
+
+func (r *TaskPostgres) GetAllTasksWithProjectID(ctx context.Context) ([]models.TaskWithProjectID, error) {
+	query := fmt.Sprintf(`SELECT pts.project_id, ts.id, ts.title, ts.description, ts.creation_date,
+		ts.assignee_id, ts.importance_status_id, ts.progress_status_id
+		FROM %s as pts inner join %s as ts on pts.task_id = ts.id`, projectsTasksTable, tasksTable)
+	var tasks []models.TaskWithProjectID
+
+	dbCtx, cancel := context.WithTimeout(ctx, dbTimeout)
+	defer cancel()
+
+	err := r.db.SelectContext(dbCtx, &tasks, query)
+
+	if tasks == nil {
+		return []models.TaskWithProjectID{}, nil
 	}
 
 	return tasks, err

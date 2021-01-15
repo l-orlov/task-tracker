@@ -52,14 +52,14 @@ func (r *SubtaskPostgres) CreateSubtaskToTask(ctx context.Context, taskID int64,
 
 func (r *SubtaskPostgres) GetSubtaskByID(ctx context.Context, id int64) (models.Subtask, error) {
 	query := fmt.Sprintf("SELECT id, title, description, creation_date, assignee_id, importance_status_id, progress_status_id FROM %s WHERE id=$1", subtasksTable)
-	var task models.Subtask
+	var subtask models.Subtask
 
 	dbCtx, cancel := context.WithTimeout(ctx, dbTimeout)
 	defer cancel()
 
-	err := r.db.GetContext(dbCtx, &task, query, id)
+	err := r.db.GetContext(dbCtx, &subtask, query, id)
 
-	return task, err
+	return subtask, err
 }
 
 func (r *SubtaskPostgres) UpdateSubtask(ctx context.Context, id int64, subtask models.SubtaskToUpdate) error {
@@ -77,16 +77,21 @@ func (r *SubtaskPostgres) UpdateSubtask(ctx context.Context, id int64, subtask m
 }
 
 func (r *SubtaskPostgres) GetAllSubtasksToTask(ctx context.Context, projectID int64) ([]models.Subtask, error) {
-	query := fmt.Sprintf(`SELECT ss.id, ss.title, ss.description, ss.creation_date, ss.assignee_id, ss.importance_status_id, ss.progress_status_id
+	query := fmt.Sprintf(`SELECT ss.id, ss.title, ss.description, ss.creation_date,
+		ss.assignee_id, ss.importance_status_id, ss.progress_status_id
 		FROM %s as tss inner join %s as ss on tss.subtask_id = ss.id where tss.task_id = $1`, tasksSubtasksTable, subtasksTable)
-	var tasks []models.Subtask
+	var subtasks []models.Subtask
 
 	dbCtx, cancel := context.WithTimeout(ctx, dbTimeout)
 	defer cancel()
 
-	err := r.db.SelectContext(dbCtx, &tasks, query, projectID)
+	err := r.db.SelectContext(dbCtx, &subtasks, query, projectID)
 
-	return tasks, err
+	if subtasks == nil {
+		return []models.Subtask{}, nil
+	}
+
+	return subtasks, err
 }
 
 func (r *SubtaskPostgres) GetAllSubtasksWithParameters(ctx context.Context, params models.SubtaskParams) ([]models.Subtask, error) {
@@ -114,6 +119,24 @@ func (r *SubtaskPostgres) GetAllSubtasksWithParameters(ctx context.Context, para
 
 	if subtasks == nil {
 		return []models.Subtask{}, nil
+	}
+
+	return subtasks, err
+}
+
+func (r *SubtaskPostgres) GetAllSubtasksWithTaskID(ctx context.Context) ([]models.SubtaskWithTaskID, error) {
+	query := fmt.Sprintf(`SELECT tss.task_id, ss.id, ss.title, ss.description, ss.creation_date,
+		ss.assignee_id, ss.importance_status_id, ss.progress_status_id
+		FROM %s as tss inner join %s as ss on tss.subtask_id = ss.id`, tasksSubtasksTable, subtasksTable)
+	var subtasks []models.SubtaskWithTaskID
+
+	dbCtx, cancel := context.WithTimeout(ctx, dbTimeout)
+	defer cancel()
+
+	err := r.db.SelectContext(dbCtx, &subtasks, query)
+
+	if subtasks == nil {
+		return []models.SubtaskWithTaskID{}, nil
 	}
 
 	return subtasks, err

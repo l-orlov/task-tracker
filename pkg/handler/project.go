@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/LevOrlov5404/task-tracker/models"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/sync/errgroup"
 	"net/http"
 	"strconv"
 )
@@ -86,6 +87,59 @@ func (h *Handler) GetAllProjectsWithParameters(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, projects)
+}
+
+func (h *Handler) GetAllProjectsWithTasksSubtasks(c *gin.Context) {
+	var (
+		projects           []models.Project
+		tasksWithProjectID []models.TaskWithProjectID
+		subtasksWithTaskID []models.SubtaskWithTaskID
+	)
+
+	g, ctx := errgroup.WithContext(c)
+
+	g.Go(func() error {
+		var err error
+		projects, err = h.services.Project.GetAllProjects(ctx)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		tasksWithProjectID, err = h.services.Task.GetAllTasksWithProjectID(c)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		subtasksWithTaskID, err = h.services.Subtask.GetAllSubtasksWithTaskID(c)
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	subtasksToTask := make(map[int64][]models.Subtask)
+	for _, subtaskWithTaskID := range subtasksWithTaskID {
+		subtasksToTask[subtaskWithTaskID.TaskID] = append(subtasksToTask[subtaskWithTaskID.TaskID], subtaskWithTaskID.ToSubtask())
+	}
+
+	tasksToProject := make(map[int64][]models.TaskWithSubtasks)
+	for _, taskWithProjectID := range tasksWithProjectID {
+		taskWithSubtasks := taskWithProjectID.ToTaskWithSubtasks()
+		taskWithSubtasks.Subtasks = subtasksToTask[taskWithSubtasks.ID]
+		tasksToProject[taskWithProjectID.ProjectID] = append(tasksToProject[taskWithProjectID.ProjectID], taskWithSubtasks)
+	}
+
+	projectsWithTsWithSs := make([]models.ProjectWithTasksWithSubtasks, len(projects))
+	for i := range projects {
+		projectsWithTsWithSs[i] = projects[i].ToProjectWithTasksWithSubtasks()
+		projectsWithTsWithSs[i].Tasks = tasksToProject[projectsWithTsWithSs[i].ID]
+	}
+
+	c.JSON(http.StatusOK, projectsWithTsWithSs)
 }
 
 func (h *Handler) DeleteProject(c *gin.Context) {

@@ -10,12 +10,8 @@ type (
 	}
 
 	SubtaskToUpdate struct {
-		Title              string `json:"title" binding:"required"`
-		Description        string `json:"description"`
-		CreationDate       string `json:"creationDate" binding:"required"`
-		AssigneeID         int64  `json:"assigneeId" binding:"required"`
-		ImportanceStatusID int64  `json:"importanceStatusId" binding:"required"`
-		ProgressStatusID   int64  `json:"progressStatusId" binding:"required"`
+		SubtaskToCreate
+		CreationDate string `json:"creationDate" binding:"required"`
 	}
 
 	Subtask struct {
@@ -37,4 +33,13 @@ type (
 		ImportanceStatusID *int64  `json:"importanceStatusId"`
 		ProgressStatusID   *int64  `json:"progressStatusId"`
 	}
+
+	SubtaskWithTaskID struct {
+		TaskID int64 `db:"task_id"`
+		Subtask
+	}
 )
+
+func (subtaskWithTaskID SubtaskWithTaskID) ToSubtask() Subtask {
+	return subtaskWithTaskID.Subtask
+}

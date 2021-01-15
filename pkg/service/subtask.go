@@ -34,6 +34,10 @@ func (s *SubtaskService) GetAllSubtasksWithParameters(ctx context.Context, param
 	return s.repo.GetAllSubtasksWithParameters(ctx, params)
 }
 
+func (s *SubtaskService) GetAllSubtasksWithTaskID(ctx context.Context) ([]models.SubtaskWithTaskID, error) {
+	return s.repo.GetAllSubtasksWithTaskID(ctx)
+}
+
 func (s *SubtaskService) DeleteSubtask(ctx context.Context, id int64) error {
 	return s.repo.DeleteSubtask(ctx, id)
 }

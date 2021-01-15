@@ -10,12 +10,8 @@ type (
 	}
 
 	ProjectToUpdate struct {
-		Title              string `json:"title" binding:"required"`
-		Description        string `json:"description"`
-		CreationDate       string `json:"creationDate" binding:"required"`
-		AssigneeID         int64  `json:"assigneeId" binding:"required"`
-		ImportanceStatusID int64  `json:"importanceStatusId" binding:"required"`
-		ProgressStatusID   int64  `json:"progressStatusId" binding:"required"`
+		ProjectToCreate
+		CreationDate string `json:"creationDate" binding:"required"`
 	}
 
 	Project struct {
@@ -38,15 +34,14 @@ type (
 		ProgressStatusID   *int64  `json:"progressStatusId"`
 	}
 
-	ProjectWithTasksSubtasks struct {
-		ID                 int64     `json:"id"`
-		Title              string    `json:"title"`
-		Description        string    `json:"description"`
-		CreationDate       string    `json:"creationDate"`
-		AssigneeID         int64     `json:"assigneeId"`
-		ImportanceStatusID int64     `json:"importanceStatusId"`
-		ProgressStatusID   int64     `json:"progressStatusId"`
-		Tasks              []Task    `json:"tasks"`
-		Subtasks           []Subtask `json:"subtasks"`
+	ProjectWithTasksWithSubtasks struct {
+		Project
+		Tasks []TaskWithSubtasks `json:"tasks"`
 	}
 )
+
+func (project Project) ToProjectWithTasksWithSubtasks() ProjectWithTasksWithSubtasks {
+	return ProjectWithTasksWithSubtasks{
+		Project: project,
+	}
+}

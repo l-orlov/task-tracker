@@ -49,6 +49,7 @@ type (
 		UpdateTask(ctx context.Context, id int64, task models.TaskToUpdate) error
 		GetAllTasksToProject(ctx context.Context, id int64) ([]models.Task, error)
 		GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error)
+		GetAllTasksWithProjectID(ctx context.Context) ([]models.TaskWithProjectID, error)
 		DeleteTask(ctx context.Context, id int64) error
 	}
 
@@ -58,11 +59,8 @@ type (
 		UpdateSubtask(ctx context.Context, id int64, subtask models.SubtaskToUpdate) error
 		GetAllSubtasksToTask(ctx context.Context, id int64) ([]models.Subtask, error)
 		GetAllSubtasksWithParameters(ctx context.Context, params models.SubtaskParams) ([]models.Subtask, error)
+		GetAllSubtasksWithTaskID(ctx context.Context) ([]models.SubtaskWithTaskID, error)
 		DeleteSubtask(ctx context.Context, id int64) error
-	}
-
-	Report interface {
-		GetAllProjectsWithTasksSubtasks(ctx context.Context) ([]models.ProjectWithTasksSubtasks, error)
 	}
 
 	Service struct {
@@ -72,7 +70,6 @@ type (
 		Project
 		Task
 		Subtask
-		Report
 	}
 )
 
@@ -84,6 +81,5 @@ func NewService(repo *repository.Repository, salt, signingKey string) *Service {
 		Project:          NewProjectService(repo.Project),
 		Task:             NewTaskService(repo.Task),
 		Subtask:          NewSubtaskService(repo.Subtask),
-		Report:           NewReportService(repo.Report),
 	}
 }
