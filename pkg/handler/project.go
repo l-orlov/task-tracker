@@ -96,23 +96,23 @@ func (h *Handler) GetAllProjectsWithTasksSubtasks(c *gin.Context) {
 		subtasksWithTaskID []models.SubtaskWithTaskID
 	)
 
-	g, ctx := errgroup.WithContext(c)
+	g, gCtx := errgroup.WithContext(c)
 
 	g.Go(func() error {
 		var err error
-		projects, err = h.services.Project.GetAllProjects(ctx)
+		projects, err = h.services.Project.GetAllProjects(gCtx)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		tasksWithProjectID, err = h.services.Task.GetAllTasksWithProjectID(c)
+		tasksWithProjectID, err = h.services.Task.GetAllTasksWithProjectID(gCtx)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		subtasksWithTaskID, err = h.services.Subtask.GetAllSubtasksWithTaskID(c)
+		subtasksWithTaskID, err = h.services.Subtask.GetAllSubtasksWithTaskID(gCtx)
 		return err
 	})
 
