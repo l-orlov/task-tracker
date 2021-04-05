@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/LevOrlov5404/task-tracker/pkg/service"
 	"github.com/gin-gonic/gin"
+	"github.com/l-orlov/task-tracker/pkg/service"
 )
 
 type Handler struct {

@@ -2,8 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/LevOrlov5404/task-tracker/models"
-	"github.com/LevOrlov5404/task-tracker/pkg/repository"
+
+	"github.com/l-orlov/task-tracker/models"
+	"github.com/l-orlov/task-tracker/pkg/repository"
 )
 
 type ProgressStatusService struct {

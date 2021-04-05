@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/LevOrlov5404/task-tracker/models"
 	"github.com/gin-gonic/gin"
+	"github.com/l-orlov/task-tracker/models"
 )
 
 func (h *Handler) CreateUser(c *gin.Context) {

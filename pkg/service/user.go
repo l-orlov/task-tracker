@@ -5,11 +5,11 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"time"
 
-	"github.com/LevOrlov5404/task-tracker/models"
-	"github.com/LevOrlov5404/task-tracker/pkg/repository"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/l-orlov/task-tracker/models"
+	"github.com/l-orlov/task-tracker/pkg/repository"
 )
 
 const (

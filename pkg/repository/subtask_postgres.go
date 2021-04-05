@@ -3,9 +3,10 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/LevOrlov5404/task-tracker/models"
-	"github.com/jmoiron/sqlx"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/l-orlov/task-tracker/models"
 )
 
 type SubtaskPostgres struct {

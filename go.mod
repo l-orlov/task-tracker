@@ -1,4 +1,4 @@
-module github.com/LevOrlov5404/task-tracker
+module github.com/l-orlov/task-tracker
 
 go 1.15
 

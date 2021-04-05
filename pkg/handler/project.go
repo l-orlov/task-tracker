@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"github.com/LevOrlov5404/task-tracker/models"
-	"github.com/gin-gonic/gin"
-	"golang.org/x/sync/errgroup"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/l-orlov/task-tracker/models"
+	"golang.org/x/sync/errgroup"
 )
 
 func (h *Handler) CreateProject(c *gin.Context) {
