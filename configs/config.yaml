@@ -1,8 +1,30 @@
-port: "8080"
+address: 0.0.0.0:8080
 
-db:
-  host: "localhost"
-  port: "54320"
-  user: "postgres"
-  dbname: "postgres"
-  sslmode: "disable"
+postgresDB:
+  connMaxLifetime: 10m
+  maxOpenConns: 10
+  maxIdleConns: 10
+  timeout: 3s
+
+redis:
+  proto: tcp
+  maxActive: 200
+  maxIdle: 100
+  idleTimeout: 240s
+
+jwt:
+  accessTokenLifetime: 1h
+  refreshTokenLifetime: 24h
+
+userBlocking:
+  lifetime: 30m
+  maxErrors: 3
+
+verification:
+  emailConfirmTokenLifetime: 24h
+  passwordResetConfirmTokenLifetime: 1h
+
+mailer:
+  timeout: 3s
+  msgToSendChanSize: 10
+  workersNum: 1

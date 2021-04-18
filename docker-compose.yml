@@ -1,0 +1,65 @@
+version: '3.7'
+
+services:
+  postgres:
+    container_name: task-tracker-postgres
+    environment:
+      - PGDATA=/var/lib/postgresql/data/
+      - POSTGRES_DB=${PG_DATABASE}
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+    image: postgres
+    ports:
+      - 54320:5432
+#    restart: unless-stopped
+    volumes:
+      - task-tracker-postgres:/var/lib/postgresql/data
+    networks:
+      - task-tracker
+
+  redis:
+    container_name: task-tracker-redis
+    image: redis
+    ports:
+      - 6379:6379
+#    restart: unless-stopped
+    volumes:
+      - task-tracker-redis:/data
+    networks:
+      - task-tracker
+
+  task-tracker-api:
+    build: .
+    command: ./task-tracker
+    container_name: task-tracker-api
+    environment:
+      - CONFIG_PATH=${CONFIG_PATH}
+      - LOGGER_LEVEL=${LOGGER_LEVEL}
+      - LOGGER_FORMAT=${LOGGER_FORMAT}
+      - PG_ADDRESS=task-tracker-postgres:5432
+      - PG_USER=${PG_USER}
+      - PG_PASSWORD=${PG_PASSWORD}
+      - PG_DATABASE=${PG_DATABASE}
+      - REDIS_ADDRESS=task-tracker-redis:6379
+      - JWT_SIGNING_KEY=${JWT_SIGNING_KEY}
+      - COOKIE_HASH_KEY=${COOKIE_HASH_KEY}
+      - COOKIE_BLOCK_KEY=${COOKIE_BLOCK_KEY}
+      - EMAIL_SERVER_ADDRESS=${EMAIL_SERVER_ADDRESS}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+    ports:
+      - 8080:8080
+#    restart: unless-stopped
+    networks:
+      - task-tracker
+
+volumes:
+  task-tracker-postgres:
+    driver: local
+  task-tracker-redis:
+    driver: local
+
+networks:
+  task-tracker:
+    external: true
+    name: task-tracker

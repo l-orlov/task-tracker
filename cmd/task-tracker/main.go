@@ -2,74 +2,87 @@ package main
 
 import (
 	"context"
+	"errors"
+	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/joho/godotenv"
-	"github.com/l-orlov/task-tracker"
-	"github.com/l-orlov/task-tracker/pkg/handler"
-	"github.com/l-orlov/task-tracker/pkg/repository"
-	"github.com/l-orlov/task-tracker/pkg/service"
+	"github.com/l-orlov/task-tracker/internal/config"
+	"github.com/l-orlov/task-tracker/internal/repository"
+	userpostgres "github.com/l-orlov/task-tracker/internal/repository/user-postgres"
+	"github.com/l-orlov/task-tracker/internal/server"
+	"github.com/l-orlov/task-tracker/internal/service"
+	"github.com/l-orlov/task-tracker/pkg/logger"
 	_ "github.com/lib/pq"
+	"github.com/sethvargo/go-password/password"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+)
+
+const (
+	passwordAllowedLowerLetters = "abcdefghijklmnopqrstuvwxyz"
+	passwordAllowedUpperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	passwordAllowedDigits       = "0123456789"
 )
 
 func main() {
-	logrus.SetFormatter(new(logrus.JSONFormatter))
-
-	if err := initConfig(); err != nil {
-		logrus.Fatalf("failed to initialize config: %s", err.Error())
+	cfg := &config.Config{}
+	if err := config.ReadFromFileAndSetEnv(os.Getenv("CONFIG_PATH"), cfg); err != nil {
+		log.Fatalf("failed to read config: %v", err)
 	}
 
-	if err := godotenv.Load(); err != nil {
-		logrus.Fatalf("failed to load env variables: %s", err.Error())
-	}
-
-	db, err := repository.ConnectToDB(repository.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		User:     viper.GetString("db.user"),
-		Password: os.Getenv("DB_PASSWORD"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
-	})
+	lg, err := logger.New(cfg.Logger.Level, cfg.Logger.Format)
 	if err != nil {
-		logrus.Fatalf("failed to connect to db: %s", err.Error())
+		log.Fatalf("failed to init logger: %v", err)
+	}
+
+	db, err := userpostgres.ConnectToDB(cfg)
+	if err != nil {
+		lg.Fatalf("failed to connect to db: %v", err)
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
-			logrus.Errorf("error occurred on db connection closing: %s", err.Error())
+			lg.Errorf("failed to close db: %v", err)
 		}
 	}()
 
-	repo := repository.NewRepository(db)
-	services := service.NewService(repo, os.Getenv("SALT"), os.Getenv("SIGNING_KEY"))
-	handlers := handler.NewHandler(services)
+	repo, err := repository.NewRepository(cfg, lg, db)
+	if err != nil {
+		log.Fatalf("failed to create repository: %v", err)
+	}
 
-	srv := new(task.Server)
+	randomSymbolsGenerator, err := password.NewGenerator(&password.GeneratorInput{
+		LowerLetters: passwordAllowedLowerLetters,
+		UpperLetters: passwordAllowedUpperLetters,
+		Digits:       passwordAllowedDigits,
+	})
+	if err != nil {
+		log.Fatalf("failed to create random symbols generator: %v", err)
+	}
+
+	mailerLogEntry := logrus.NewEntry(lg).WithFields(logrus.Fields{"source": "mailerService"})
+	mailer := service.NewMailerService(cfg.Mailer, mailerLogEntry)
+	defer mailer.Close()
+
+	svc := service.NewService(cfg, lg, repo, randomSymbolsGenerator, mailer)
+
+	srv := server.NewServer(cfg, lg, svc)
 	go func() {
-		if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
-			logrus.Fatalf("error occurred while running http server: %s", err.Error())
+		if err := srv.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			lg.Fatalf("error occurred while running http server: %v", err)
 		}
 	}()
 
-	logrus.Print("TaskTracker started")
+	lg.Info("service started")
 
-	quit := make(chan os.Signal)
-	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 	<-quit
 
-	logrus.Print("TaskTracker shutting down")
+	lg.Info("service shutting down")
 
 	if err := srv.Shutdown(context.Background()); err != nil {
-		logrus.Errorf("error occurred on shutting down: %s", err.Error())
+		lg.Errorf("failed to shut down: %v", err)
 	}
-}
-
-func initConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
 }
