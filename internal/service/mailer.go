@@ -60,7 +60,7 @@ func (s *MailerService) SendEmailConfirm(toEmail, token string) {
 
 	m.SetHeader("From", s.cfg.Username)
 	m.SetHeader("To", toEmail)
-	m.SetHeader("Subject", "Matcha registration")
+	m.SetHeader("Subject", "TaskTracker registration")
 	m.SetBody("text/plain",
 		"We greet you.\nTo complete the registration go by this link.\n"+
 			"localhost:8080/confirm-email?token="+token+
@@ -74,7 +74,7 @@ func (s *MailerService) SendResetPasswordConfirm(toEmail, token string) {
 
 	m.SetHeader("From", s.cfg.Username)
 	m.SetHeader("To", toEmail)
-	m.SetHeader("Subject", "Matcha reset password")
+	m.SetHeader("Subject", "TaskTracker reset password")
 	m.SetBody("text/plain",
 		"Hello.\nTo reset password go by this link.\n"+
 			"localhost:8080/confirm-reset-password?token="+token+
