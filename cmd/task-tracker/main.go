@@ -74,7 +74,7 @@ func main() {
 		}
 	}()
 
-	lg.Info("service started")
+	lg.Infof("service started on port %s", cfg.Port)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)

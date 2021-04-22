@@ -9,15 +9,15 @@ import (
 
 type (
 	Config struct {
-		Address      AddressConfig `yaml:"address"`
-		Logger       Logger        `yaml:"logger"`
-		PostgresDB   PostgresDB    `yaml:"postgresDB"`
-		Redis        Redis         `yaml:"redis"`
-		JWT          JWT           `yaml:"jwt"`
-		Cookie       Cookie        `yaml:"cookie"`
-		UserBlocking UserBlocking  `yaml:"userBlocking"`
-		Verification Verification  `yaml:"verification"`
-		Mailer       Mailer        `yaml:"mailer"`
+		Port         string       `yaml:"port" env:"PORT,default=:8080"`
+		Logger       Logger       `yaml:"logger"`
+		PostgresDB   PostgresDB   `yaml:"postgresDB"`
+		Redis        Redis        `yaml:"redis"`
+		JWT          JWT          `yaml:"jwt"`
+		Cookie       Cookie       `yaml:"cookie"`
+		UserBlocking UserBlocking `yaml:"userBlocking"`
+		Verification Verification `yaml:"verification"`
+		Mailer       Mailer       `yaml:"mailer"`
 	}
 	Logger struct {
 		Level  string `yaml:"level" env:"LOGGER_LEVEL,default=info"`
