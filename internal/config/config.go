@@ -24,6 +24,7 @@ type (
 		Format string `yaml:"format" env:"LOGGER_FORMAT,default=default"`
 	}
 	PostgresDB struct {
+		URL             string         `yaml:"url" env:"DATABASE_URL,default=postgres://task-tracker:123@localhost:54320/task-tracker?sslmode=disable"`
 		Address         AddressConfig  `yaml:"address" env:"PG_ADDRESS,default=0.0.0.0:5432"`
 		User            string         `yaml:"user" env:"PG_USER,default=postgres"`
 		Password        string         `yaml:"password" env:"PG_PASSWORD,default=123"`

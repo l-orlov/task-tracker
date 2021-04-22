@@ -12,7 +12,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const timeout = 10 * time.Second
+const (
+	maxHeaderBytes = 1 << 20 // 1 MB
+	timeout        = 10 * time.Second
+)
 
 type (
 	Options struct {
@@ -46,7 +49,7 @@ func NewServer(
 	s.httpServer = &http.Server{
 		Addr:           cfg.Port,
 		Handler:        s.InitRoutes(),
-		MaxHeaderBytes: 1 << 20, // 1 MB
+		MaxHeaderBytes: maxHeaderBytes,
 		ReadTimeout:    timeout,
 		WriteTimeout:   timeout,
 	}
