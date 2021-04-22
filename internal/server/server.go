@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
 	"github.com/l-orlov/task-tracker/internal/config"
@@ -59,6 +60,9 @@ func NewServer(
 
 func (s *Server) InitRoutes() *gin.Engine {
 	router := gin.New()
+
+	// for static files
+	router.Use(static.Serve("/", static.LocalFile("./static", true)))
 
 	router.Use(s.InitMiddleware)
 
