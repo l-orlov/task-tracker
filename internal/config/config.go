@@ -9,7 +9,7 @@ import (
 
 type (
 	Config struct {
-		Port         string       `yaml:"port" env:"PORT,default=:8080"`
+		Port         string       `yaml:"port" env:"PORT,default=8080"`
 		Logger       Logger       `yaml:"logger"`
 		PostgresDB   PostgresDB   `yaml:"postgresDB"`
 		Redis        Redis        `yaml:"redis"`

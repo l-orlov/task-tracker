@@ -47,7 +47,7 @@ func NewServer(
 	}
 
 	s.httpServer = &http.Server{
-		Addr:           cfg.Port,
+		Addr:           ":" + cfg.Port,
 		Handler:        s.InitRoutes(),
 		MaxHeaderBytes: maxHeaderBytes,
 		ReadTimeout:    timeout,
