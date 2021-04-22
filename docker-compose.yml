@@ -30,6 +30,9 @@ services:
 
   task-tracker-api:
     build: .
+    depends_on:
+      - postgres
+      - redis
     command: ./task-tracker
     container_name: task-tracker-api
     environment:
