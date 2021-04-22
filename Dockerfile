@@ -47,6 +47,7 @@ WORKDIR /app/
 # Copy our static executable and needed files.
 COPY --from=builder /builder/.bin/task-tracker .
 COPY --from=builder /builder/configs configs/
+COPY --from=builder /builder/static static/
 
 # Use an unprivileged user.
 USER appuser:appuser
