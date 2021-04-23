@@ -63,7 +63,7 @@ type (
 	Mailer struct {
 		ServerAddress     AddressConfig  `yaml:"serverAddress" env:"EMAIL_SERVER_ADDRESS,default=smtp.gmail.com:587"`
 		Username          string         `yaml:"username" env:"EMAIL_USERNAME,default=test"`
-		Password          string         `yaml:"password" env:"EMAIL_PASSWORD,default=test"`
+		Password          StdBase64      `yaml:"password" env:"EMAIL_PASSWORD,default=dGVzdA=="`
 		Timeout           DurationConfig `yaml:"timeout"`
 		MsgToSendChanSize int            `yaml:"msgToSendChanSize"`
 		WorkersNum        int            `yaml:"workersNum"`

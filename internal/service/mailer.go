@@ -19,7 +19,7 @@ type (
 
 func NewMailerService(cfg config.Mailer, log *logrus.Entry) *MailerService {
 	d := gomail.NewDialer(
-		cfg.ServerAddress.Host, cfg.ServerAddress.Port, cfg.Username, cfg.Password,
+		cfg.ServerAddress.Host, cfg.ServerAddress.Port, cfg.Username, cfg.Password.String(),
 	)
 	d.Timeout = cfg.Timeout.Duration()
 	d.TLSConfig = &tls.Config{
