@@ -135,7 +135,14 @@ func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 	projectsWithTasks := make([]models.ProjectWithTasks, len(projects))
 	for i := range projects {
 		projectsWithTasks[i] = projects[i].ToProjectWithTasks()
-		projectsWithTasks[i].Tasks = tasksToProject[projectsWithTasks[i].ID]
+
+		var tasks []models.Task
+		var ok bool
+		if tasks, ok = tasksToProject[projectsWithTasks[i].ID]; !ok {
+			tasks = []models.Task{}
+		}
+
+		projectsWithTasks[i].Tasks = tasks
 	}
 
 	c.JSON(http.StatusOK, projectsWithTasks)

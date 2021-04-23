@@ -24,7 +24,7 @@ func NewTaskPostgres(db *sqlx.DB, dbTimeout time.Duration) *TaskPostgres {
 func (r *TaskPostgres) CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error) {
 	taskCreateQuery := fmt.Sprintf(`
 INSERT INTO %s (title, description, assignee_id, importance_status_id, progress_status_id)
-values ($1, $2, $3, $4, $5, $6) RETURNING id`, tasksTable)
+values ($1, $2, $3, $4, $5) RETURNING id`, tasksTable)
 	setTaskToProjectQuery := fmt.Sprintf(`INSERT INTO %s (project_id, task_id) values ($1, $2)`, projectsTasksTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
