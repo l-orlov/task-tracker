@@ -3,11 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./css/stylesheet.css">
-    <title>Document</title>
+    <title>Task Tracker</title>
+    <link rel="stylesheet" href="css/main.css" type="text/css" media="screen">
 </head>
 <body>
-    <h1>TaskTracker</h1>
-    <h2>Hello, World!</h2>
+    <header>
+        <h1>TaskTracker</h1>
+    </header>
+
+    <main>
+        <div class="container">
+            <p>
+                <label for="new-task" class="middle">Add Task</label>
+                <input id="new-task" type="text"><button>Add Task</button>
+            </p>
+
+            <h3 class="middle">Todo</h3>
+            <ul id="incomplete-tasks">
+            </ul>
+
+            <h3 class="middle">Completed Tasks</h3>
+            <ul id="completed-tasks">
+            </ul>
+        </div>
+    </main>
+
+    <footer>
+        <p>Developed by Lev Orlov</p>
+    </footer>
+
+    <script type="text/javascript" src="js/list.js"></script>
 </body>
 </html>
