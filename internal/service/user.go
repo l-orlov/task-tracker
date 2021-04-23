@@ -99,6 +99,10 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return s.repo.GetAllUsers(ctx)
 }
 
+func (s *UserService) GetAllUsersWithParameters(ctx context.Context, params models.UserParams) ([]models.User, error) {
+	return s.repo.GetAllUsersWithParameters(ctx, params)
+}
+
 func (s *UserService) DeleteUser(ctx context.Context, id uint64) error {
 	return s.repo.DeleteUser(ctx, id)
 }

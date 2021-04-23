@@ -1,4 +1,4 @@
-package user_postgres
+package postgres
 
 import (
 	"context"
@@ -11,10 +11,6 @@ import (
 	"github.com/l-orlov/task-tracker/internal/models"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
-)
-
-const (
-	usersTable = "users"
 )
 
 type UserPostgres struct {
@@ -133,6 +129,36 @@ SELECT id, email, first_name, last_name, is_email_confirmed FROM %s`, usersTable
 	}
 
 	return users, nil
+}
+
+func (r *UserPostgres) GetAllUsersWithParameters(ctx context.Context, params models.UserParams) ([]models.User, error) {
+	query := fmt.Sprintf(`
+SELECT id, email, first_name, last_name, is_email_confirmed FROM %s
+WHERE (id = $1 OR $1 is null) AND (email ILIKE $2 OR $2 is null) AND (first_name ILIKE $3 OR $3 is null) AND
+(last_name = $4 OR $4 is null) AND (is_email_confirmed = $5 OR $5 is null)
+ORDER BY id ASC`, usersTable)
+
+	if params.Email != nil {
+		*params.Email = "%%" + *params.Email + "%%"
+	}
+
+	if params.FirstName != nil {
+		*params.FirstName = "%%" + *params.FirstName + "%%"
+	}
+
+	if params.LastName != nil {
+		*params.LastName = "%%" + *params.LastName + "%%"
+	}
+
+	var users []models.User
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	err := r.db.SelectContext(dbCtx, &users, query, params.ID, params.Email,
+		params.FirstName, params.LastName, params.IsEmailConfirmed)
+
+	return users, err
 }
 
 func (r *UserPostgres) DeleteUser(ctx context.Context, id uint64) error {

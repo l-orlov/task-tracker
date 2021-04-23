@@ -1,4 +1,4 @@
-package server
+package handler
 
 import (
 	"net/http"
@@ -17,23 +17,37 @@ const (
 	ctxLogEntry = "log-entry"
 )
 
-var ErrNotValidAuthorizationHeader = errors.New("not valid Authorization header")
+func CORS(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Allow-Methods", "GET,POST")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization")
+			return
+		} else {
+			h.ServeHTTP(w, r)
+		}
+	})
+}
 
-func (s *Server) InitMiddleware(c *gin.Context) {
+func (h *Handler) InitMiddleware(c *gin.Context) {
 	requestID := uuid.New().String()
-	logEntry := logrus.NewEntry(s.log).WithField("request-id", requestID)
+	logEntry := logrus.NewEntry(h.log).WithField("request-id", requestID)
 	c.Set(ctxLogEntry, logEntry)
 }
 
-func (s *Server) UserAuthorizationMiddleware(c *gin.Context) {
-	err := s.validateTokenCookieAndRefreshIfNeeded(c)
+func (h *Handler) UserAuthorizationMiddleware(c *gin.Context) {
+	err := h.validateTokenCookieAndRefreshIfNeeded(c)
 	if err == nil {
 		return
 	}
 	getLogEntry(c).Debug(err)
 
-	if err = s.validateTokenHeader(c); err != nil {
-		s.newErrorResponse(c, http.StatusUnauthorized, err)
+	if err = h.validateTokenHeader(c); err != nil {
+		h.newErrorResponse(c, http.StatusUnauthorized, err)
 		return
 	}
 }
@@ -43,50 +57,50 @@ func (s *Server) UserAuthorizationMiddleware(c *gin.Context) {
 // else it tries to refresh session by refresh token from cookie:
 // - on success puts accessToken data to ctx and returns nil
 // - on failure returns error.
-func (s *Server) validateTokenCookieAndRefreshIfNeeded(c *gin.Context) error {
-	accessToken, err := s.Cookie(c, accessTokenCookieName)
+func (h *Handler) validateTokenCookieAndRefreshIfNeeded(c *gin.Context) error {
+	accessToken, err := h.Cookie(c, accessTokenCookieName)
 	if err != nil {
 		getLogEntry(c).Debug(err)
-		return s.refreshSessionByRefreshTokenCookie(c)
+		return h.refreshSessionByRefreshTokenCookie(c)
 	}
 
-	accessTokenClaims, err := s.svc.UserAuthorization.ValidateAccessToken(accessToken)
+	accessTokenClaims, err := h.svc.UserAuthorization.ValidateAccessToken(accessToken)
 	if err != nil {
 		if !strings.Contains(err.Error(), "token is expired by") &&
 			!errors.Is(err, service.ErrNotActiveAccessToken) {
 			return err
 		}
 
-		return s.refreshSessionByRefreshTokenCookie(c)
+		return h.refreshSessionByRefreshTokenCookie(c)
 	}
 
 	return setUserIDForContext(c, accessTokenClaims.Subject)
 }
 
-func (s *Server) refreshSessionByRefreshTokenCookie(c *gin.Context) error {
-	refreshToken, err := s.Cookie(c, refreshTokenCookieName)
+func (h *Handler) refreshSessionByRefreshTokenCookie(c *gin.Context) error {
+	refreshToken, err := h.Cookie(c, refreshTokenCookieName)
 	if err != nil {
 		return err
 	}
 
-	newAccessToken, newRefreshToken, err := s.svc.UserAuthorization.RefreshSession(refreshToken)
+	newAccessToken, newRefreshToken, err := h.svc.UserAuthorization.RefreshSession(refreshToken)
 	if err != nil {
 		return err
 	}
 
-	accessTokenClaims, err := s.svc.UserAuthorization.GetAccessTokenClaims(newAccessToken)
+	accessTokenClaims, err := h.svc.UserAuthorization.GetAccessTokenClaims(newAccessToken)
 	if err != nil {
 		return err
 	}
 
-	s.setTokensCookies(c, newAccessToken, newRefreshToken)
+	h.setTokensCookies(c, newAccessToken, newRefreshToken)
 
 	return setUserIDForContext(c, accessTokenClaims.Subject)
 }
 
 // validateTokenHeader gets accessToken from header and validate it.
 // on success it puts accessToken data to ctx and returns nil. else it returns error.
-func (s *Server) validateTokenHeader(c *gin.Context) error {
+func (h *Handler) validateTokenHeader(c *gin.Context) error {
 	header := c.GetHeader("Authorization")
 	headerParts := strings.Split(header, " ")
 	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
@@ -94,7 +108,7 @@ func (s *Server) validateTokenHeader(c *gin.Context) error {
 	}
 
 	accessToken := headerParts[1]
-	accessTokenClaims, err := s.svc.UserAuthorization.ValidateAccessToken(accessToken)
+	accessTokenClaims, err := h.svc.UserAuthorization.ValidateAccessToken(accessToken)
 	if err != nil {
 		return err
 	}

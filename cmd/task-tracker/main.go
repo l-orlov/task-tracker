@@ -10,8 +10,9 @@ import (
 	"syscall"
 
 	"github.com/l-orlov/task-tracker/internal/config"
+	"github.com/l-orlov/task-tracker/internal/handler"
 	"github.com/l-orlov/task-tracker/internal/repository"
-	userpostgres "github.com/l-orlov/task-tracker/internal/repository/user-postgres"
+	"github.com/l-orlov/task-tracker/internal/repository/postgres"
 	"github.com/l-orlov/task-tracker/internal/server"
 	"github.com/l-orlov/task-tracker/internal/service"
 	"github.com/l-orlov/task-tracker/pkg/logger"
@@ -38,7 +39,7 @@ func main() {
 		log.Fatalf("failed to init logger: %v", err)
 	}
 
-	db, err := userpostgres.ConnectToDB(cfg.PostgresDB)
+	db, err := postgres.ConnectToDB(cfg.PostgresDB)
 	if err != nil {
 		lg.Fatalf("failed to connect to db: %v", err)
 	}
@@ -48,8 +49,10 @@ func main() {
 		}
 	}()
 
-	if err = userpostgres.MigrateSchema(db.DB, cfg.PostgresDB); err != nil {
-		log.Fatalf("failed to do migration: %v", err)
+	if cfg.PostgresDB.MigrationMode {
+		if err = postgres.MigrateSchema(db.DB, cfg.PostgresDB); err != nil {
+			log.Fatalf("failed to do migration: %v", err)
+		}
 	}
 
 	repo, err := repository.NewRepository(cfg, lg, db)
@@ -71,8 +74,9 @@ func main() {
 	defer mailer.Close()
 
 	svc := service.NewService(cfg, lg, repo, randomSymbolsGenerator, mailer)
+	h := handler.New(cfg, lg, svc)
 
-	srv := server.NewServer(cfg, lg, svc)
+	srv := server.New(cfg.Port, h.InitRoutes())
 	go func() {
 		if err = srv.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			lg.Fatalf("error occurred while running http server: %v", err)

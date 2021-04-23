@@ -7,7 +7,7 @@ import (
 	"github.com/l-orlov/task-tracker/internal/config"
 	"github.com/l-orlov/task-tracker/internal/models"
 	cacheredis "github.com/l-orlov/task-tracker/internal/repository/cache-redis"
-	userpostgres "github.com/l-orlov/task-tracker/internal/repository/user-postgres"
+	"github.com/l-orlov/task-tracker/internal/repository/postgres"
 	"github.com/sirupsen/logrus"
 )
 
@@ -19,8 +19,40 @@ type (
 		UpdateUser(ctx context.Context, user models.User) error
 		UpdateUserPassword(ctx context.Context, userID uint64, password string) error
 		GetAllUsers(ctx context.Context) ([]models.User, error)
+		GetAllUsersWithParameters(ctx context.Context, params models.UserParams) ([]models.User, error)
 		DeleteUser(ctx context.Context, id uint64) error
 		ConfirmEmail(ctx context.Context, id uint64) error
+	}
+	ImportanceStatus interface {
+		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (models.Status, error)
+		Update(ctx context.Context, id int64, status models.StatusToCreate) error
+		GetAll(ctx context.Context) ([]models.Status, error)
+		Delete(ctx context.Context, id int64) error
+	}
+	ProgressStatus interface {
+		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (models.Status, error)
+		Update(ctx context.Context, id int64, status models.StatusToCreate) error
+		GetAll(ctx context.Context) ([]models.Status, error)
+		Delete(ctx context.Context, id int64) error
+	}
+	Project interface {
+		CreateProject(ctx context.Context, project models.ProjectToCreate) (int64, error)
+		GetProjectByID(ctx context.Context, id int64) (models.Project, error)
+		UpdateProject(ctx context.Context, id int64, project models.ProjectToUpdate) error
+		GetAllProjects(ctx context.Context) ([]models.Project, error)
+		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
+		DeleteProject(ctx context.Context, id int64) error
+	}
+	Task interface {
+		CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error)
+		GetTaskByID(ctx context.Context, id int64) (models.Task, error)
+		UpdateTask(ctx context.Context, id int64, task models.TaskToUpdate) error
+		GetAllTasksToProject(ctx context.Context, id int64) ([]models.Task, error)
+		GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error)
+		GetAllTasksWithProjectID(ctx context.Context) ([]models.TaskWithProjectID, error)
+		DeleteTask(ctx context.Context, id int64) error
 	}
 	SessionCache interface {
 		PutSessionAndAccessToken(session models.Session, refreshToken string) error
@@ -43,6 +75,10 @@ type (
 	}
 	Repository struct {
 		User
+		ImportanceStatus
+		ProgressStatus
+		Project
+		Task
 		SessionCache
 		VerificationCache
 	}
@@ -51,7 +87,7 @@ type (
 func NewRepository(
 	cfg *config.Config, log *logrus.Logger, db *sqlx.DB,
 ) (*Repository, error) {
-	userRepo := userpostgres.NewUserPostgres(db, cfg.PostgresDB.Timeout.Duration())
+	dbTimeout := cfg.PostgresDB.Timeout.Duration()
 
 	cacheLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "cache-redis"})
 	cacheOptions := cacheredis.Options{
@@ -64,7 +100,11 @@ func NewRepository(
 	cache := cacheredis.New(cfg.Redis, cacheLogEntry, cacheOptions)
 
 	return &Repository{
-		User:              userRepo,
+		User:              postgres.NewUserPostgres(db, dbTimeout),
+		ImportanceStatus:  postgres.NewImportanceStatusPostgres(db, dbTimeout),
+		ProgressStatus:    postgres.NewProgressStatusPostgres(db, dbTimeout),
+		Project:           postgres.NewProjectPostgres(db, dbTimeout),
+		Task:              postgres.NewTaskPostgres(db, dbTimeout),
 		SessionCache:      cache,
 		VerificationCache: cache,
 	}, nil

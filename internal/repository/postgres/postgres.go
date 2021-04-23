@@ -1,10 +1,19 @@
-package user_postgres
+package postgres
 
 import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/l-orlov/task-tracker/internal/config"
+)
+
+const (
+	usersTable            = "users"
+	importanceStatusTable = "importance_status"
+	progressStatusTable   = "progress_status"
+	projectsTable         = "projects"
+	tasksTable            = "tasks"
+	projectsTasksTable    = "projects_tasks"
 )
 
 func ConnectToDB(cfg config.PostgresDB) (*sqlx.DB, error) {

@@ -33,6 +33,7 @@ type (
 		MaxOpenConns    int            `yaml:"maxOpenConns"`
 		MaxIdleConns    int            `yaml:"maxIdleConns"`
 		Timeout         DurationConfig `yaml:"timeout"`
+		MigrationMode   bool           `yaml:"migrationMode"`
 		MigrationDir    string         `yaml:"migrationDir"`
 	}
 	Redis struct {

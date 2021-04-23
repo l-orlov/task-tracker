@@ -22,8 +22,40 @@ type (
 		SetUserPassword(ctx context.Context, userID uint64, password string) error
 		ChangeUserPassword(ctx context.Context, userID uint64, oldPassword, newPassword string) error
 		GetAllUsers(ctx context.Context) ([]models.User, error)
+		GetAllUsersWithParameters(ctx context.Context, params models.UserParams) ([]models.User, error)
 		DeleteUser(ctx context.Context, id uint64) error
 		ConfirmEmail(ctx context.Context, id uint64) error
+	}
+	ImportanceStatus interface {
+		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (models.Status, error)
+		Update(ctx context.Context, id int64, status models.StatusToCreate) error
+		GetAll(ctx context.Context) ([]models.Status, error)
+		Delete(ctx context.Context, id int64) error
+	}
+	ProgressStatus interface {
+		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (models.Status, error)
+		Update(ctx context.Context, id int64, status models.StatusToCreate) error
+		GetAll(ctx context.Context) ([]models.Status, error)
+		Delete(ctx context.Context, id int64) error
+	}
+	Project interface {
+		CreateProject(ctx context.Context, project models.ProjectToCreate) (int64, error)
+		GetProjectByID(ctx context.Context, id int64) (models.Project, error)
+		UpdateProject(ctx context.Context, id int64, project models.ProjectToUpdate) error
+		GetAllProjects(ctx context.Context) ([]models.Project, error)
+		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
+		DeleteProject(ctx context.Context, id int64) error
+	}
+	Task interface {
+		CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error)
+		GetTaskByID(ctx context.Context, id int64) (models.Task, error)
+		UpdateTask(ctx context.Context, id int64, task models.TaskToUpdate) error
+		GetAllTasksToProject(ctx context.Context, id int64) ([]models.Task, error)
+		GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error)
+		GetAllTasksWithProjectID(ctx context.Context) ([]models.TaskWithProjectID, error)
+		DeleteTask(ctx context.Context, id int64) error
 	}
 	UserAuthentication interface {
 		AuthenticateUserByEmail(ctx context.Context, email, password, fingerprint string) (userID uint64, err error)
@@ -47,6 +79,10 @@ type (
 	}
 	Service struct {
 		User
+		ImportanceStatus
+		ProgressStatus
+		Project
+		Task
 		UserAuthentication
 		UserAuthorization
 		Verification
@@ -64,6 +100,10 @@ func NewService(
 
 	return &Service{
 		User:               NewUserService(repo.User, cfg.JWT.AccessTokenLifetime.Duration()),
+		ImportanceStatus:   NewImportanceStatusService(repo.ImportanceStatus),
+		ProgressStatus:     NewProgressStatusService(repo.ProgressStatus),
+		Project:            NewProjectService(repo.Project),
+		Task:               NewTaskService(repo.Task),
 		UserAuthentication: NewAuthenticationService(cfg, authenticationLogEntry, repo),
 		UserAuthorization:  NewAuthorizationService(cfg, repo),
 		Verification:       NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),

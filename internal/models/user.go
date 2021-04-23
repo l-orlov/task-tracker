@@ -33,6 +33,13 @@ type (
 		OldPassword string `json:"oldPassword" binding:"required"`
 		NewPassword string `json:"newPassword" binding:"required"`
 	}
+	UserParams struct {
+		ID               *uint64 `json:"id"`
+		Email            *string `json:"email"`
+		FirstName        *string `json:"firstName"`
+		LastName         *string `json:"lastName"`
+		IsEmailConfirmed *bool   `json:"isEmailConfirmed"`
+	}
 )
 
 func HashPassword(password string) (string, error) {
