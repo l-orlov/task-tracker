@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/tls"
+	"sync"
 
 	"github.com/l-orlov/task-tracker/internal/config"
 	"github.com/sirupsen/logrus"
@@ -10,10 +11,13 @@ import (
 
 type (
 	MailerService struct {
-		cfg           config.Mailer
-		log           *logrus.Entry
-		dialer        *gomail.Dialer
-		msgToSendChan chan *gomail.Message
+		cfg    config.Mailer
+		log    *logrus.Entry
+		dialer *gomail.Dialer
+
+		// use workers pool for sending email messages
+		workersWaitGroup *sync.WaitGroup
+		messagesToSend   chan *gomail.Message
 	}
 )
 
@@ -33,26 +37,25 @@ func NewMailerService(cfg config.Mailer, log *logrus.Entry) *MailerService {
 		dialer: d,
 	}
 
-	mailerSvc.msgToSendChan = make(chan *gomail.Message, cfg.MsgToSendChanSize)
 	mailerSvc.InitWorkers()
 
 	return mailerSvc
 }
 
 func (s *MailerService) InitWorkers() {
+	s.messagesToSend = make(chan *gomail.Message, s.cfg.MsgToSendChanSize)
+	s.workersWaitGroup = &sync.WaitGroup{}
+	s.workersWaitGroup.Add(s.cfg.WorkersNum)
+
 	for i := 0; i < s.cfg.WorkersNum; i++ {
-		go func() {
-			for m := range s.msgToSendChan {
-				if err := s.dialer.DialAndSend(m); err != nil {
-					s.log.Errorf("failed to send message by email: %v", err)
-				}
-			}
-		}()
+		go workerFunc(s.log, s.workersWaitGroup, s.messagesToSend, s.dialer)
 	}
 }
 
 func (s *MailerService) Close() {
-	close(s.msgToSendChan) // ToDo: add graceful shutdown for workers
+	// graceful shutdown of workers
+	close(s.messagesToSend)
+	s.workersWaitGroup.Wait()
 }
 
 func (s *MailerService) SendEmailConfirm(toEmail, token string) {
@@ -66,7 +69,7 @@ func (s *MailerService) SendEmailConfirm(toEmail, token string) {
 			s.cfg.AppDomain+"/confirm-email?token="+token+
 			"\nThank you for choosing us :)")
 
-	s.msgToSendChan <- m
+	s.messagesToSend <- m
 }
 
 func (s *MailerService) SendResetPasswordConfirm(toEmail, token string) {
@@ -80,5 +83,17 @@ func (s *MailerService) SendResetPasswordConfirm(toEmail, token string) {
 			s.cfg.AppDomain+"/confirm-reset-password?token="+token+
 			"\nThank you for choosing us :)")
 
-	s.msgToSendChan <- m
+	s.messagesToSend <- m
+}
+
+func workerFunc(
+	log *logrus.Entry, wg *sync.WaitGroup, messagesToSend <-chan *gomail.Message, dialer *gomail.Dialer,
+) {
+	defer wg.Done()
+
+	for msg := range messagesToSend {
+		if err := dialer.DialAndSend(msg); err != nil {
+			log.Errorf("failed to send message by email: %v", err)
+		}
+	}
 }
