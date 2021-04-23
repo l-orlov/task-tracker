@@ -52,7 +52,7 @@ func (s *MailerService) InitWorkers() {
 }
 
 func (s *MailerService) Close() {
-	close(s.msgToSendChan)
+	close(s.msgToSendChan) // ToDo: add graceful shutdown for workers
 }
 
 func (s *MailerService) SendEmailConfirm(toEmail, token string) {
@@ -63,7 +63,7 @@ func (s *MailerService) SendEmailConfirm(toEmail, token string) {
 	m.SetHeader("Subject", "TaskTracker registration")
 	m.SetBody("text/plain",
 		"We greet you.\nTo complete the registration go by this link.\n"+
-			"localhost:8080/confirm-email?token="+token+
+			s.cfg.AppDomain+"/confirm-email?token="+token+
 			"\nThank you for choosing us :)")
 
 	s.msgToSendChan <- m
@@ -77,7 +77,7 @@ func (s *MailerService) SendResetPasswordConfirm(toEmail, token string) {
 	m.SetHeader("Subject", "TaskTracker reset password")
 	m.SetBody("text/plain",
 		"Hello.\nTo reset password go by this link.\n"+
-			"localhost:8080/confirm-reset-password?token="+token+
+			s.cfg.AppDomain+"/confirm-reset-password?token="+token+
 			"\nThank you for choosing us :)")
 
 	s.msgToSendChan <- m

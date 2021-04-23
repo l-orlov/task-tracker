@@ -64,6 +64,7 @@ type (
 		ServerAddress     AddressConfig  `yaml:"serverAddress" env:"EMAIL_SERVER_ADDRESS,default=smtp.gmail.com:587"`
 		Username          string         `yaml:"username" env:"EMAIL_USERNAME,default=test"`
 		Password          StdBase64      `yaml:"password" env:"EMAIL_PASSWORD,default=dGVzdA=="`
+		AppDomain         string         `yaml:"appDomain" env:"APP_DOMAIN,default=localhost:8080"`
 		Timeout           DurationConfig `yaml:"timeout"`
 		MsgToSendChanSize int            `yaml:"msgToSendChanSize"`
 		WorkersNum        int            `yaml:"workersNum"`
