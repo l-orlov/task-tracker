@@ -33,6 +33,7 @@ type (
 		MaxOpenConns    int            `yaml:"maxOpenConns"`
 		MaxIdleConns    int            `yaml:"maxIdleConns"`
 		Timeout         DurationConfig `yaml:"timeout"`
+		MigrationDir    string         `yaml:"migrationDir"`
 	}
 	Redis struct {
 		Address     AddressConfig  `yaml:"address" env:"REDIS_ADDRESS,default=0.0.0.0:6379"`
@@ -80,8 +81,8 @@ func DecodeYamlFile(path string, v interface{}) error {
 	return yaml.Unmarshal(buf, v)
 }
 
-func ReadFromFileAndSetEnv(path string, v interface{}) error {
-	if err := DecodeYamlFile(path, v); err != nil {
+func ReadFromFileAndSetEnv(path string, v interface{}) (err error) {
+	if err = DecodeYamlFile(path, v); err != nil {
 		return err
 	}
 

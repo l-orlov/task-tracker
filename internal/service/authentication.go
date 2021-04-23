@@ -34,7 +34,7 @@ func NewAuthenticationService(
 func (s *AuthenticationService) AuthenticateUserByEmail(
 	ctx context.Context, email, password, fingerprint string,
 ) (userID uint64, err error) {
-	if err := s.checkUserBlocking(fingerprint); err != nil {
+	if err = s.checkUserBlocking(fingerprint); err != nil {
 		return 0, err
 	}
 
@@ -47,11 +47,11 @@ func (s *AuthenticationService) AuthenticateUserByEmail(
 		return 0, ierrors.NewBusiness(ErrUserNotFound, "")
 	}
 
-	if err := s.checkUserPasswordHash(fingerprint, user.Password, password); err != nil {
+	if err = s.checkUserPasswordHash(fingerprint, user.Password, password); err != nil {
 		return 0, err
 	}
 
-	if err := s.repo.SessionCache.DeleteUserBlocking(fingerprint); err != nil {
+	if err = s.repo.SessionCache.DeleteUserBlocking(fingerprint); err != nil {
 		s.log.Errorf("err while DeleteUserBlocking: %v", err)
 	}
 

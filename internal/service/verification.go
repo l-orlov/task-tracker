@@ -55,7 +55,7 @@ func (s *VerificationService) VerifyEmailConfirmToken(confirmToken string) (user
 		return 0, errors.Wrap(err, "failed to get email confirmation token data from cache")
 	}
 
-	if err := s.repo.DeleteEmailConfirmToken(confirmToken); err != nil {
+	if err = s.repo.DeleteEmailConfirmToken(confirmToken); err != nil {
 		s.log.Error(errors.Wrap(err, "failed to delete email confirmation token from cache"))
 	}
 
@@ -84,7 +84,7 @@ func (s *VerificationService) VerifyPasswordResetConfirmToken(confirmToken strin
 		return 0, errors.Wrap(err, "failed to get reset password confirmation token data from cache")
 	}
 
-	if err := s.repo.DeletePasswordResetConfirmToken(confirmToken); err != nil {
+	if err = s.repo.DeletePasswordResetConfirmToken(confirmToken); err != nil {
 		s.log.Error(errors.Wrap(err, "failed to delete reset password confirmation token from cache"))
 	}
 

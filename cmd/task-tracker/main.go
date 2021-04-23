@@ -28,7 +28,8 @@ const (
 
 func main() {
 	cfg := &config.Config{}
-	if err := config.ReadFromFileAndSetEnv(os.Getenv("CONFIG_PATH"), cfg); err != nil {
+	var err error
+	if err = config.ReadFromFileAndSetEnv(os.Getenv("CONFIG_PATH"), cfg); err != nil {
 		log.Fatalf("failed to read config: %v", err)
 	}
 
@@ -37,15 +38,19 @@ func main() {
 		log.Fatalf("failed to init logger: %v", err)
 	}
 
-	db, err := userpostgres.ConnectToDB(cfg)
+	db, err := userpostgres.ConnectToDB(cfg.PostgresDB)
 	if err != nil {
 		lg.Fatalf("failed to connect to db: %v", err)
 	}
 	defer func() {
-		if err := db.Close(); err != nil {
+		if err = db.Close(); err != nil {
 			lg.Errorf("failed to close db: %v", err)
 		}
 	}()
+
+	if err = userpostgres.MigrateSchema(db.DB, cfg.PostgresDB); err != nil {
+		log.Fatalf("failed to do migration: %v", err)
+	}
 
 	repo, err := repository.NewRepository(cfg, lg, db)
 	if err != nil {
@@ -69,7 +74,7 @@ func main() {
 
 	srv := server.NewServer(cfg, lg, svc)
 	go func() {
-		if err := srv.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err = srv.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			lg.Fatalf("error occurred while running http server: %v", err)
 		}
 	}()
@@ -82,7 +87,7 @@ func main() {
 
 	lg.Info("service shutting down")
 
-	if err := srv.Shutdown(context.Background()); err != nil {
+	if err = srv.Shutdown(context.Background()); err != nil {
 		lg.Errorf("failed to shut down: %v", err)
 	}
 }

@@ -24,7 +24,7 @@ func (s *Server) ConfirmEmail(c *gin.Context) {
 		return
 	}
 
-	if err := s.svc.User.ConfirmEmail(c, userID); err != nil {
+	if err = s.svc.User.ConfirmEmail(c, userID); err != nil {
 		s.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}

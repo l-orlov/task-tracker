@@ -77,7 +77,7 @@ func (r *Redis) PutSessionAndAccessToken(session models.Session, refreshToken st
 		return err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -87,7 +87,7 @@ func (r *Redis) PutSessionAndAccessToken(session models.Session, refreshToken st
 		return err
 	}
 
-	if err := conn.Send("MULTI"); err != nil {
+	if err = conn.Send("MULTI"); err != nil {
 		return err
 	}
 
@@ -123,7 +123,7 @@ func (r *Redis) GetSession(refreshToken string) (*models.Session, error) {
 		return nil, err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -148,7 +148,7 @@ func (r *Redis) DeleteSession(refreshToken string) error {
 		return err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -166,7 +166,7 @@ func (r *Redis) DeleteUserToSession(userID, refreshToken string) error {
 		return err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -184,7 +184,7 @@ func (r *Redis) GetAccessTokenData(accessTokenID string) (refreshToken string, e
 		return "", err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -203,7 +203,7 @@ func (r *Redis) DeleteAccessToken(accessTokenID string) error {
 		return err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -221,7 +221,7 @@ func (r *Redis) AddUserBlocking(fingerprint string) (int64, error) {
 		return 0, err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -245,7 +245,7 @@ func (r *Redis) GetUserBlocking(fingerprint string) (int, error) {
 		return 0, err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -264,7 +264,7 @@ func (r *Redis) DeleteUserBlocking(fingerprint string) error {
 		return err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -280,7 +280,7 @@ func (r *Redis) PutEmailConfirmToken(userID uint64, token string) error {
 		return err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -300,7 +300,7 @@ func (r *Redis) GetEmailConfirmTokenData(token string) (userID uint64, err error
 		return 0, err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -319,7 +319,7 @@ func (r *Redis) DeleteEmailConfirmToken(token string) error {
 		return err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -337,7 +337,7 @@ func (r *Redis) PutPasswordResetConfirmToken(userID uint64, token string) error 
 		return err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -357,7 +357,7 @@ func (r *Redis) GetPasswordResetConfirmTokenData(token string) (userID uint64, e
 		return 0, err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()
@@ -376,7 +376,7 @@ func (r *Redis) DeletePasswordResetConfirmToken(token string) error {
 		return err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err = conn.Close(); err != nil {
 			r.log.Error(err)
 		}
 	}()

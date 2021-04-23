@@ -113,7 +113,7 @@ func (s *AuthorizationService) RevokeSession(accessToken string) error {
 		return err
 	}
 
-	if err := s.repo.DeleteAccessToken(accessTokenClaims.Id); err != nil {
+	if err = s.repo.DeleteAccessToken(accessTokenClaims.Id); err != nil {
 		return err
 	}
 
@@ -124,7 +124,7 @@ func (s *AuthorizationService) RevokeSession(accessToken string) error {
 		}
 	}
 
-	if err := s.repo.DeleteSession(refreshToken); err != nil {
+	if err = s.repo.DeleteSession(refreshToken); err != nil {
 		return err
 	}
 

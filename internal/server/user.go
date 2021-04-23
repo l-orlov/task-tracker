@@ -13,7 +13,8 @@ func (s *Server) CreateUser(c *gin.Context) {
 	setHandlerNameToLogEntry(c, "CreateUser")
 
 	var user models.UserToCreate
-	if err := c.BindJSON(&user); err != nil {
+	var err error
+	if err = c.BindJSON(&user); err != nil {
 		s.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
@@ -67,12 +68,13 @@ func (s *Server) UpdateUser(c *gin.Context) {
 	setHandlerNameToLogEntry(c, "UpdateUser")
 
 	var user models.User
-	if err := c.BindJSON(&user); err != nil {
+	var err error
+	if err = c.BindJSON(&user); err != nil {
 		s.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	if err := s.svc.User.UpdateUser(c, user); err != nil {
+	if err = s.svc.User.UpdateUser(c, user); err != nil {
 		s.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -84,14 +86,15 @@ func (s *Server) SetUserPassword(c *gin.Context) {
 	setHandlerNameToLogEntry(c, "SetPassword")
 
 	var user models.UserPassword
-	if err := c.BindJSON(&user); err != nil {
+	var err error
+	if err = c.BindJSON(&user); err != nil {
 		s.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
 	// ToDo: add deleting all sessions
 
-	if err := s.svc.User.SetUserPassword(c, user.ID, user.Password); err != nil {
+	if err = s.svc.User.SetUserPassword(c, user.ID, user.Password); err != nil {
 		s.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -103,12 +106,13 @@ func (s *Server) ChangeUserPassword(c *gin.Context) {
 	setHandlerNameToLogEntry(c, "ChangePassword")
 
 	var user models.UserPasswordToChange
-	if err := c.BindJSON(&user); err != nil {
+	var err error
+	if err = c.BindJSON(&user); err != nil {
 		s.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	if err := s.svc.User.ChangeUserPassword(c, user.ID, user.OldPassword, user.NewPassword); err != nil {
+	if err = s.svc.User.ChangeUserPassword(c, user.ID, user.OldPassword, user.NewPassword); err != nil {
 		s.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -144,7 +148,7 @@ func (s *Server) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	if err := s.svc.User.DeleteUser(c, id); err != nil {
+	if err = s.svc.User.DeleteUser(c, id); err != nil {
 		s.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}

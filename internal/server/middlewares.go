@@ -32,7 +32,7 @@ func (s *Server) UserAuthorizationMiddleware(c *gin.Context) {
 	}
 	getLogEntry(c).Debug(err)
 
-	if err := s.validateTokenHeader(c); err != nil {
+	if err = s.validateTokenHeader(c); err != nil {
 		s.newErrorResponse(c, http.StatusUnauthorized, err)
 		return
 	}

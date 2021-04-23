@@ -7,13 +7,13 @@ import (
 	"github.com/l-orlov/task-tracker/internal/config"
 )
 
-func ConnectToDB(cfg *config.Config) (*sqlx.DB, error) {
-	db, err := sqlx.Open("postgres", initConnectionString(cfg.PostgresDB))
+func ConnectToDB(cfg config.PostgresDB) (*sqlx.DB, error) {
+	db, err := sqlx.Open("postgres", initConnectionString(cfg))
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
+	if err = db.Ping(); err != nil {
 		return nil, err
 	}
 

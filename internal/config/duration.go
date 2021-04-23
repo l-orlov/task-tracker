@@ -23,9 +23,9 @@ func (d *DurationConfig) Decode(value string) error {
 	return nil
 }
 
-func (d *DurationConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (d *DurationConfig) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 	var v interface{}
-	if err := unmarshal(&v); err != nil {
+	if err = unmarshal(&v); err != nil {
 		return err
 	}
 

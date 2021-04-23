@@ -48,6 +48,7 @@ WORKDIR /app/
 COPY --from=builder /builder/.bin/task-tracker .
 COPY --from=builder /builder/configs configs/
 COPY --from=builder /builder/static static/
+COPY --from=builder /builder/schema schema/
 
 # Use an unprivileged user.
 USER appuser:appuser

@@ -19,7 +19,8 @@ func (s *Server) SignIn(c *gin.Context) {
 	setHandlerNameToLogEntry(c, "SignIn")
 
 	var user models.UserToSignIn
-	if err := c.BindJSON(&user); err != nil {
+	var err error
+	if err = c.BindJSON(&user); err != nil {
 		s.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
@@ -47,7 +48,8 @@ func (s *Server) ValidateAccessToken(c *gin.Context) {
 	setHandlerNameToLogEntry(c, "ValidateAccessToken")
 
 	var req models.ValidateAccessTokenRequest
-	if err := c.BindJSON(&req); err != nil {
+	var err error
+	if err = c.BindJSON(&req); err != nil {
 		s.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
@@ -64,7 +66,8 @@ func (s *Server) RefreshSession(c *gin.Context) {
 	setHandlerNameToLogEntry(c, "RefreshSession")
 
 	var req models.RefreshSessionRequest
-	if err := c.BindJSON(&req); err != nil {
+	var err error
+	if err = c.BindJSON(&req); err != nil {
 		s.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
@@ -92,7 +95,7 @@ func (s *Server) Logout(c *gin.Context) {
 	if accessToken == "" {
 		// try to get accessToken from request
 		var req models.LogoutRequest
-		if err := c.BindJSON(&req); err != nil {
+		if err = c.BindJSON(&req); err != nil {
 			s.newErrorResponse(c, http.StatusBadRequest, err)
 			return
 		}
@@ -171,7 +174,7 @@ func (s *Server) Cookie(c *gin.Context, name string) (string, error) {
 	}
 
 	var decodedValue string
-	if err := s.options.SecureCookie.Decode(name, value, &decodedValue); err != nil {
+	if err = s.options.SecureCookie.Decode(name, value, &decodedValue); err != nil {
 		return "", err
 	}
 

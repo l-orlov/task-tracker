@@ -23,9 +23,9 @@ func (b *StdBase64) Decode(value string) error {
 	return nil
 }
 
-func (b *StdBase64) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (b *StdBase64) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 	var input string
-	if err := unmarshal(&input); err != nil {
+	if err = unmarshal(&input); err != nil {
 		return err
 	}
 
