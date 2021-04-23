@@ -24,11 +24,11 @@ type (
 		Format string `yaml:"format" env:"LOGGER_FORMAT,default=default"`
 	}
 	PostgresDB struct {
-		URL             string         `yaml:"url" env:"DATABASE_URL,default=postgres://task-tracker:123@localhost:54320/task-tracker?sslmode=disable"`
 		Address         AddressConfig  `yaml:"address" env:"PG_ADDRESS,default=0.0.0.0:5432"`
 		User            string         `yaml:"user" env:"PG_USER,default=postgres"`
 		Password        string         `yaml:"password" env:"PG_PASSWORD,default=123"`
 		Database        string         `yaml:"name" env:"PG_DATABASE,default=postgres"`
+		SSLMode         string         `yaml:"sslmode" env:"PG_SSL_MODE,default=disable"`
 		ConnMaxLifetime DurationConfig `yaml:"connMaxLifetime"`
 		MaxOpenConns    int            `yaml:"maxOpenConns"`
 		MaxIdleConns    int            `yaml:"maxIdleConns"`
@@ -36,6 +36,7 @@ type (
 	}
 	Redis struct {
 		Address     AddressConfig  `yaml:"address" env:"REDIS_ADDRESS,default=0.0.0.0:6379"`
+		Password    string         `yaml:"password" env:"REDIS_PASSWORD,default="`
 		Proto       string         `yaml:"proto"`
 		MaxActive   int            `yaml:"maxActive"`
 		MaxIdle     int            `yaml:"maxIdle"`

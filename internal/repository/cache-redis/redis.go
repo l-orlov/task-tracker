@@ -46,7 +46,7 @@ func New(cfg config.Redis, log *logrus.Entry, options Options) *Redis {
 		MaxActive:   cfg.MaxActive,
 		IdleTimeout: cfg.IdleTimeout.Duration(),
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial(cfg.Proto, cfg.Address.String())
+			return redis.Dial(cfg.Proto, cfg.Address.String(), redis.DialPassword(cfg.Password))
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			_, err := c.Do("PING")
