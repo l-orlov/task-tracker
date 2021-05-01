@@ -36,7 +36,11 @@ func CORS(h http.Handler) http.Handler {
 func (h *Handler) InitMiddleware(c *gin.Context) {
 	requestID := uuid.New().String()
 	logEntry := logrus.NewEntry(h.log).WithField("request-id", requestID)
+
+	logEntry.Infof("%s: %s", c.Request.Method, c.Request.RequestURI)
+
 	c.Set(ctxLogEntry, logEntry)
+	c.Next()
 }
 
 func (h *Handler) UserAuthorizationMiddleware(c *gin.Context) {
@@ -50,6 +54,8 @@ func (h *Handler) UserAuthorizationMiddleware(c *gin.Context) {
 		h.newErrorResponse(c, http.StatusUnauthorized, err)
 		return
 	}
+
+	c.Next()
 }
 
 // validateTokenCookieAndRefreshIfNeeded gets accessToken from cookie and validate it.
