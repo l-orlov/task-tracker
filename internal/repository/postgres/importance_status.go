@@ -29,7 +29,7 @@ func (r *ImportanceStatusPostgres) Create(ctx context.Context, status models.Sta
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	row := r.db.QueryRowContext(dbCtx, query, status.Name)
+	row := r.db.QueryRowContext(dbCtx, query, &status.Name)
 	if err := row.Err(); err != nil {
 		return 0, err
 	}
@@ -66,7 +66,7 @@ func (r *ImportanceStatusPostgres) Update(ctx context.Context, id int64, status 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, status.Name, id)
+	_, err := r.db.ExecContext(dbCtx, query, &status.Name, &id)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (r *ImportanceStatusPostgres) Delete(ctx context.Context, id int64) error {
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, id)
+	_, err := r.db.ExecContext(dbCtx, query, &id)
 	if err != nil {
 		return err
 	}

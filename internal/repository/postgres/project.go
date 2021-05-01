@@ -30,7 +30,7 @@ INSERT INTO %s (name, description, owner) values ($1, $2, $3) RETURNING id`, pro
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	row := r.db.QueryRowContext(dbCtx, query, project.Name, project.Description, owner)
+	row := r.db.QueryRowContext(dbCtx, query, &project.Name, &project.Description, &owner)
 	if err := row.Err(); err != nil {
 		return 0, err
 	}
@@ -69,7 +69,7 @@ UPDATE %s SET name = $1, description = $2, owner = $3 WHERE id = $4`, projectTab
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, project.Name, project.Description, project.Owner, project.ID)
+	_, err := r.db.ExecContext(dbCtx, query, &project.Name, &project.Description, &project.Owner, &project.ID)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ ORDER BY id ASC`, projectTable)
 	defer cancel()
 
 	err := r.db.SelectContext(
-		dbCtx, &projects, query, params.ID, params.Name, params.Description, params.Owner,
+		dbCtx, &projects, query, &params.ID, &params.Name, &params.Description, &params.Owner,
 	)
 
 	return projects, err
@@ -123,7 +123,7 @@ func (r *ProjectPostgres) DeleteProject(ctx context.Context, id uint64) error {
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, id)
+	_, err := r.db.ExecContext(dbCtx, query, &id)
 	if err != nil {
 		return err
 	}

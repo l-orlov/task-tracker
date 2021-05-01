@@ -31,8 +31,8 @@ values ($1, $2, $3, $4, $5, $6) RETURNING id`, taskTable)
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	row := r.db.QueryRowContext(dbCtx, query, task.ProjectID, task.Title, task.Description,
-		task.AssigneeID, task.ImportanceStatusID, task.ProgressStatusID)
+	row := r.db.QueryRowContext(dbCtx, query, &task.ProjectID, &task.Title, &task.Description,
+		&task.AssigneeID, &task.ImportanceStatusID, &task.ProgressStatusID)
 	if err := row.Err(); err != nil {
 		return 0, err
 	}
@@ -73,8 +73,8 @@ importance_status_id = $4, progress_status_id = $5 WHERE id = $6`, taskTable)
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, task.Title, task.Description, task.AssigneeID,
-		task.ImportanceStatusID, task.ProgressStatusID, task.ID)
+	_, err := r.db.ExecContext(dbCtx, query, &task.Title, &task.Description, &task.AssigneeID,
+		&task.ImportanceStatusID, &task.ProgressStatusID, &task.ID)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ FROM %s WHERE project_id=$1`, taskTable)
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	err := r.db.SelectContext(dbCtx, &tasks, query, projectID)
+	err := r.db.SelectContext(dbCtx, &tasks, query, &projectID)
 
 	return tasks, err
 }
@@ -118,8 +118,8 @@ ORDER BY id ASC`, taskTable)
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	err := r.db.SelectContext(dbCtx, &tasks, query, params.ID, params.ProjectID, params.Title,
-		params.Description, params.AssigneeID, params.ImportanceStatusID, params.ProgressStatusID)
+	err := r.db.SelectContext(dbCtx, &tasks, query, &params.ID, &params.ProjectID, &params.Title,
+		&params.Description, &params.AssigneeID, &params.ImportanceStatusID, &params.ProgressStatusID)
 
 	return tasks, err
 }
@@ -144,7 +144,7 @@ func (r *TaskPostgres) DeleteTask(ctx context.Context, id uint64) error {
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, id)
+	_, err := r.db.ExecContext(dbCtx, query, &id)
 	if err != nil {
 		return err
 	}

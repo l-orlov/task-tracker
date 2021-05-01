@@ -29,7 +29,7 @@ func (r *ProgressStatusPostgres) Create(ctx context.Context, status models.Statu
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	row := r.db.QueryRowContext(dbCtx, query, status.Name)
+	row := r.db.QueryRowContext(dbCtx, query, &status.Name)
 	if err := row.Err(); err != nil {
 		return 0, err
 	}
@@ -66,7 +66,7 @@ func (r *ProgressStatusPostgres) Update(ctx context.Context, id int64, status mo
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, status.Name, id)
+	_, err := r.db.ExecContext(dbCtx, query, &status.Name, &id)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (r *ProgressStatusPostgres) Delete(ctx context.Context, id int64) error {
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, id)
+	_, err := r.db.ExecContext(dbCtx, query, &id)
 	if err != nil {
 		return err
 	}
