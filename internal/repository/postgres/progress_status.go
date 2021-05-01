@@ -2,11 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/l-orlov/task-tracker/internal/models"
+	"github.com/pkg/errors"
 )
 
 type ProgressStatusPostgres struct {
@@ -40,16 +42,22 @@ func (r *ProgressStatusPostgres) Create(ctx context.Context, status models.Statu
 	return id, nil
 }
 
-func (r *ProgressStatusPostgres) GetByID(ctx context.Context, id int64) (models.Status, error) {
+func (r *ProgressStatusPostgres) GetByID(ctx context.Context, id int64) (*models.Status, error) {
 	query := fmt.Sprintf(`SELECT id, name FROM %s WHERE id=$1`, progressStatusTable)
 	var status models.Status
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	err := r.db.GetContext(dbCtx, &status, query, id)
+	if err := r.db.GetContext(dbCtx, &status, query, &id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 
-	return status, err
+		return nil, err
+	}
+
+	return &status, nil
 }
 
 func (r *ProgressStatusPostgres) Update(ctx context.Context, id int64, status models.StatusToCreate) error {

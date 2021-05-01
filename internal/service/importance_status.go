@@ -19,7 +19,7 @@ func (s *ImportanceStatusService) Create(ctx context.Context, status models.Stat
 	return s.repo.Create(ctx, status)
 }
 
-func (s *ImportanceStatusService) GetByID(ctx context.Context, id int64) (models.Status, error) {
+func (s *ImportanceStatusService) GetByID(ctx context.Context, id int64) (*models.Status, error) {
 	return s.repo.GetByID(ctx, id)
 }
 

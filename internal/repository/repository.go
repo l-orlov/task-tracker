@@ -25,14 +25,14 @@ type (
 	}
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (models.Status, error)
+		GetByID(ctx context.Context, id int64) (*models.Status, error)
 		Update(ctx context.Context, id int64, status models.StatusToCreate) error
 		GetAll(ctx context.Context) ([]models.Status, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	ProgressStatus interface {
 		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (models.Status, error)
+		GetByID(ctx context.Context, id int64) (*models.Status, error)
 		Update(ctx context.Context, id int64, status models.StatusToCreate) error
 		GetAll(ctx context.Context) ([]models.Status, error)
 		Delete(ctx context.Context, id int64) error
@@ -46,13 +46,13 @@ type (
 		DeleteProject(ctx context.Context, id uint64) error
 	}
 	Task interface {
-		CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error)
-		GetTaskByID(ctx context.Context, id int64) (models.Task, error)
-		UpdateTask(ctx context.Context, id int64, task models.TaskToUpdate) error
-		GetAllTasksToProject(ctx context.Context, id int64) ([]models.Task, error)
+		CreateTaskToProject(ctx context.Context, task models.TaskToCreate) (uint64, error)
+		GetTaskByID(ctx context.Context, id uint64) (*models.Task, error)
+		UpdateTask(ctx context.Context, task models.TaskToUpdate) error
+		GetAllTasksToProject(ctx context.Context, id uint64) ([]models.Task, error)
 		GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error)
-		GetAllTasksWithProjectID(ctx context.Context) ([]models.TaskWithProjectID, error)
-		DeleteTask(ctx context.Context, id int64) error
+		GetAllTasks(ctx context.Context) ([]models.Task, error)
+		DeleteTask(ctx context.Context, id uint64) error
 	}
 	SessionCache interface {
 		PutSessionAndAccessToken(session models.Session, refreshToken string) error

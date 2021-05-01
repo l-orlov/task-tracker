@@ -114,6 +114,7 @@ CREATE TRIGGER set_timestamp
     ON tasks
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
+CREATE INDEX idx_tasks_project_id ON tasks (project_id);
 
 -- sprints have tasks that should be done for sprint time
 CREATE TABLE sprints

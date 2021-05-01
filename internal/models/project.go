@@ -7,10 +7,9 @@ type (
 	}
 
 	ProjectToUpdate struct {
-		ID          uint64 `json:"id" binding:"required"`
-		Name        string `json:"name" binding:"required"`
-		Description string `json:"description"`
-		Owner       uint64 `json:"owner" binding:"required"`
+		ID uint64 `json:"id" binding:"required"`
+		ProjectToCreate
+		Owner uint64 `json:"owner" binding:"required"`
 	}
 
 	Project struct {

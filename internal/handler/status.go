@@ -39,6 +39,11 @@ func (h *Handler) GetImportanceStatusByID(c *gin.Context) {
 		return
 	}
 
+	if status == nil {
+		c.Status(http.StatusNoContent)
+		return
+	}
+
 	c.JSON(http.StatusOK, status)
 }
 
@@ -121,6 +126,11 @@ func (h *Handler) GetProgressStatusByID(c *gin.Context) {
 	status, err := h.svc.ProgressStatus.GetByID(c, id)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	if status == nil {
+		c.Status(http.StatusNoContent)
 		return
 	}
 

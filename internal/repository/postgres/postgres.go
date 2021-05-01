@@ -13,7 +13,6 @@ const (
 	progressStatusTable   = "progress_statuses"
 	projectsTable         = "projects"
 	tasksTable            = "tasks"
-	projectsTasksTable    = "projects_tasks"
 )
 
 func ConnectToDB(cfg config.PostgresDB) (*sqlx.DB, error) {

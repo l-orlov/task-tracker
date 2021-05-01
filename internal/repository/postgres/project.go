@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/l-orlov/task-tracker/internal/models"
+	"github.com/pkg/errors"
 )
 
 type ProjectPostgres struct {

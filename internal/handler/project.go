@@ -107,8 +107,8 @@ func (h *Handler) GetAllProjectsWithParameters(c *gin.Context) {
 
 func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 	var (
-		projects           []models.Project
-		tasksWithProjectID []models.TaskWithProjectID
+		projects []models.Project
+		tasks    []models.Task
 	)
 
 	g, gCtx := errgroup.WithContext(c)
@@ -121,7 +121,7 @@ func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 
 	g.Go(func() error {
 		var err error
-		tasksWithProjectID, err = h.svc.Task.GetAllTasksWithProjectID(gCtx)
+		tasks, err = h.svc.Task.GetAllTasks(gCtx)
 		return err
 	})
 
@@ -131,10 +131,8 @@ func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 	}
 
 	tasksToProject := make(map[uint64][]models.Task)
-	for _, taskWithProjectID := range tasksWithProjectID {
-		tasksToProject[taskWithProjectID.ProjectID] = append(
-			tasksToProject[taskWithProjectID.ProjectID], taskWithProjectID.Task,
-		)
+	for _, task := range tasks {
+		tasksToProject[task.ProjectID] = append(tasksToProject[task.ProjectID], task)
 	}
 
 	projectsWithTasks := make([]models.ProjectWithTasks, len(projects))
