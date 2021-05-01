@@ -27,8 +27,8 @@ func NewUserPostgres(db *sqlx.DB, dbTimeout time.Duration) *UserPostgres {
 
 func (r *UserPostgres) CreateUser(ctx context.Context, user models.UserToCreate) (uint64, error) {
 	query := fmt.Sprintf(`
-INSERT INTO %s (email, first_name, last_name, password)
-VALUES ($1, $2, $3, $4) RETURNING id`, usersTable)
+INSERT INTO %s (email, firstname, lastname, password)
+VALUES ($1, $2, $3, $4) RETURNING id`, userTable)
 	var err error
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -50,7 +50,7 @@ VALUES ($1, $2, $3, $4) RETURNING id`, usersTable)
 
 func (r *UserPostgres) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := fmt.Sprintf(`
-SELECT id, email, first_name, last_name, password FROM %s WHERE email=$1`, usersTable)
+SELECT id, email, firstname, lastname, password FROM %s WHERE email=$1`, userTable)
 	var user models.User
 	var err error
 
@@ -70,7 +70,7 @@ SELECT id, email, first_name, last_name, password FROM %s WHERE email=$1`, users
 
 func (r *UserPostgres) GetUserByID(ctx context.Context, id uint64) (*models.User, error) {
 	query := fmt.Sprintf(`
-SELECT id, email, first_name, last_name, password, is_email_confirmed FROM %s WHERE id=$1`, usersTable)
+SELECT id, email, firstname, lastname, password, is_email_confirmed FROM %s WHERE id=$1`, userTable)
 	var user models.User
 	var err error
 
@@ -90,7 +90,7 @@ SELECT id, email, first_name, last_name, password, is_email_confirmed FROM %s WH
 
 func (r *UserPostgres) UpdateUser(ctx context.Context, user models.User) error {
 	query := fmt.Sprintf(`
-UPDATE %s SET first_name = $1, last_name = $2 WHERE id = $3`, usersTable)
+UPDATE %s SET firstname = $1, lastname = $2 WHERE id = $3`, userTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
@@ -104,7 +104,7 @@ UPDATE %s SET first_name = $1, last_name = $2 WHERE id = $3`, usersTable)
 }
 
 func (r *UserPostgres) UpdateUserPassword(ctx context.Context, userID uint64, password string) error {
-	query := fmt.Sprintf(`UPDATE %s SET password = $1 WHERE id = $2`, usersTable)
+	query := fmt.Sprintf(`UPDATE %s SET password = $1 WHERE id = $2`, userTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
@@ -118,7 +118,7 @@ func (r *UserPostgres) UpdateUserPassword(ctx context.Context, userID uint64, pa
 
 func (r *UserPostgres) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	query := fmt.Sprintf(`
-SELECT id, email, first_name, last_name, is_email_confirmed FROM %s`, usersTable)
+SELECT id, email, firstname, lastname, is_email_confirmed FROM %s`, userTable)
 	var users []models.User
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -133,10 +133,10 @@ SELECT id, email, first_name, last_name, is_email_confirmed FROM %s`, usersTable
 
 func (r *UserPostgres) GetAllUsersWithParameters(ctx context.Context, params models.UserParams) ([]models.User, error) {
 	query := fmt.Sprintf(`
-SELECT id, email, first_name, last_name, is_email_confirmed FROM %s
-WHERE (id = $1 OR $1 is null) AND (email ILIKE $2 OR $2 is null) AND (first_name ILIKE $3 OR $3 is null) AND
-(last_name = $4 OR $4 is null) AND (is_email_confirmed = $5 OR $5 is null)
-ORDER BY id ASC`, usersTable)
+SELECT id, email, firstname, lastname, is_email_confirmed FROM %s
+WHERE (id = $1 OR $1 is null) AND (email ILIKE $2 OR $2 is null) AND (firstname ILIKE $3 OR $3 is null) AND
+(lastname = $4 OR $4 is null) AND (is_email_confirmed = $5 OR $5 is null)
+ORDER BY id ASC`, userTable)
 
 	if params.Email != nil {
 		*params.Email = "%%" + *params.Email + "%%"
@@ -162,7 +162,7 @@ ORDER BY id ASC`, usersTable)
 }
 
 func (r *UserPostgres) DeleteUser(ctx context.Context, id uint64) error {
-	query := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, usersTable)
+	query := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, userTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
@@ -175,7 +175,7 @@ func (r *UserPostgres) DeleteUser(ctx context.Context, id uint64) error {
 }
 
 func (r *UserPostgres) ConfirmEmail(ctx context.Context, id uint64) error {
-	query := fmt.Sprintf(`UPDATE %s SET is_email_confirmed = true WHERE id = $1`, usersTable)
+	query := fmt.Sprintf(`UPDATE %s SET is_email_confirmed = true WHERE id = $1`, userTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()

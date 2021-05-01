@@ -71,11 +71,11 @@ func (h *Handler) InitRoutes() http.Handler {
 			users.POST("/", h.CreateUser)
 			users.GET("/", h.GetAllUsers)
 			users.GET("/with-params", h.GetAllUsersWithParameters)
-			users.GET("/by-id/:id", h.GetUserByID)
+			users.GET("/:id", h.GetUserByID)
 			users.PUT("/", h.UpdateUser)
 			users.PUT("/set-password", h.SetUserPassword)
 			users.PUT("/change-password", h.ChangeUserPassword)
-			users.DELETE("/by-id/:id", h.DeleteUser)
+			users.DELETE("/:id", h.DeleteUser)
 		}
 
 		importanceStatuses := api.Group("/importance")
@@ -112,7 +112,7 @@ func (h *Handler) InitRoutes() http.Handler {
 			tasks.POST("/", h.CreateTaskToProject)
 			tasks.GET("/", h.GetAllTasksToProject)
 			tasks.GET("/with-params", h.GetAllTasksWithParameters)
-			tasks.GET("/by-id/:id", h.GetTaskByID)
+			tasks.GET("/:id", h.GetTaskByID)
 			tasks.PUT("/:id", h.UpdateTask)
 			tasks.DELETE("/:id", h.DeleteTask)
 		}

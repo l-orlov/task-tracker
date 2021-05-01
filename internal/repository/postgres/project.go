@@ -25,7 +25,7 @@ func NewProjectPostgres(db *sqlx.DB, dbTimeout time.Duration) *ProjectPostgres {
 
 func (r *ProjectPostgres) CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error) {
 	query := fmt.Sprintf(`
-INSERT INTO %s (name, description, owner) values ($1, $2, $3) RETURNING id`, projectsTable)
+INSERT INTO %s (name, description, owner) values ($1, $2, $3) RETURNING id`, projectTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
@@ -45,7 +45,7 @@ INSERT INTO %s (name, description, owner) values ($1, $2, $3) RETURNING id`, pro
 
 func (r *ProjectPostgres) GetProjectByID(ctx context.Context, id uint64) (*models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, name, description, owner FROM %s WHERE id=$1`, projectsTable)
+SELECT id, name, description, owner FROM %s WHERE id=$1`, projectTable)
 	var project models.Project
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -64,7 +64,7 @@ SELECT id, name, description, owner FROM %s WHERE id=$1`, projectsTable)
 
 func (r *ProjectPostgres) UpdateProject(ctx context.Context, project models.ProjectToUpdate) error {
 	query := fmt.Sprintf(`
-UPDATE %s SET name = $1, description = $2, owner = $3 WHERE id = $4`, projectsTable)
+UPDATE %s SET name = $1, description = $2, owner = $3 WHERE id = $4`, projectTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
@@ -79,7 +79,7 @@ UPDATE %s SET name = $1, description = $2, owner = $3 WHERE id = $4`, projectsTa
 
 func (r *ProjectPostgres) GetAllProjects(ctx context.Context) ([]models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, name, description, owner FROM %s`, projectsTable)
+SELECT id, name, description, owner FROM %s`, projectTable)
 	var projects []models.Project
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -95,7 +95,7 @@ func (r *ProjectPostgres) GetAllProjectsWithParameters(ctx context.Context, para
 SELECT id, name, description, owner FROM %s
 WHERE (id = $1 OR $1 is null) AND (name ILIKE $2 OR $2 is null) AND
 (description ILIKE $3 OR $3 is null) AND (owner = $4 OR $4 is null) 
-ORDER BY id ASC`, projectsTable)
+ORDER BY id ASC`, projectTable)
 
 	if params.Name != nil {
 		*params.Name = "%%" + *params.Name + "%%"
@@ -118,7 +118,7 @@ ORDER BY id ASC`, projectsTable)
 }
 
 func (r *ProjectPostgres) DeleteProject(ctx context.Context, id uint64) error {
-	query := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, projectsTable)
+	query := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, projectTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()

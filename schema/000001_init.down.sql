@@ -1,14 +1,14 @@
-DROP TABLE sprints_tasks;
-DROP TABLE projects_sprints;
-DROP TABLE sprints;
+DROP TABLE nn_sprint_task;
+DROP TABLE r_sprint;
 
-DROP TABLE tasks;
-DROP TABLE projects_importance_statuses;
-DROP TABLE projects_progress_statuses;
-DROP TABLE projects_users;
-DROP TABLE projects;
+DROP TABLE r_task;
+DROP TABLE s_project_importance_status;
+DROP TABLE s_project_progress_status;
+DROP TABLE nn_project_user;
+DROP TABLE r_project;
 
-DROP TABLE importance_statuses;
-DROP TABLE progress_statuses;
+DROP TABLE s_importance_status;
+DROP TABLE s_progress_status;
 
-DROP TABLE users;
+DROP TABLE r_user;
+DROP FUNCTION trigger_set_timestamp;

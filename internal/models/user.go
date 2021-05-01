@@ -19,8 +19,8 @@ type (
 	User struct {
 		ID               uint64 `json:"id" binding:"required" db:"id"`
 		Email            string `json:"email" binding:"required" db:"email"`
-		FirstName        string `json:"firstName" binding:"required" db:"first_name"`
-		LastName         string `json:"lastName" binding:"required" db:"last_name"`
+		FirstName        string `json:"firstName" binding:"required" db:"firstname"`
+		LastName         string `json:"lastName" binding:"required" db:"lastname"`
 		Password         string `json:"-" db:"password"`
 		IsEmailConfirmed bool   `json:"isEmailConfirmed" db:"is_email_confirmed"`
 	}

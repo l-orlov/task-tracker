@@ -8,11 +8,16 @@ import (
 )
 
 const (
-	usersTable            = "users"
-	importanceStatusTable = "importance_statuses"
-	progressStatusTable   = "progress_statuses"
-	projectsTable         = "projects"
-	tasksTable            = "tasks"
+	userTable                    = "r_user"
+	importanceStatusTable        = "s_importance_status"
+	progressStatusTable          = "s_progress_status"
+	projectTable                 = "r_project"
+	projectUserTable             = "nn_project_user"
+	projectImportanceStatusTable = "s_project_importance_status"
+	projectProgressStatusTable   = "s_project_progress_status"
+	taskTable                    = "r_task"
+	sprintTable                  = "r_sprint"
+	sprintTaskTable              = "nn_sprint_task"
 )
 
 func ConnectToDB(cfg config.PostgresDB) (*sqlx.DB, error) {
