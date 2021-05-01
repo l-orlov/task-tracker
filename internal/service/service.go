@@ -7,7 +7,15 @@ import (
 	"github.com/l-orlov/task-tracker/internal/config"
 	"github.com/l-orlov/task-tracker/internal/models"
 	"github.com/l-orlov/task-tracker/internal/repository"
+	"github.com/pkg/errors"
+	"github.com/sethvargo/go-password/password"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	passwordAllowedLowerLetters = "abcdefghijklmnopqrstuvwxyz"
+	passwordAllowedUpperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	passwordAllowedDigits       = "0123456789"
 )
 
 type (
@@ -41,12 +49,12 @@ type (
 		Delete(ctx context.Context, id int64) error
 	}
 	Project interface {
-		CreateProject(ctx context.Context, project models.ProjectToCreate) (int64, error)
-		GetProjectByID(ctx context.Context, id int64) (models.Project, error)
-		UpdateProject(ctx context.Context, id int64, project models.ProjectToUpdate) error
+		CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error)
+		GetProjectByID(ctx context.Context, id uint64) (*models.Project, error)
+		UpdateProject(ctx context.Context, project models.ProjectToUpdate) error
 		GetAllProjects(ctx context.Context) ([]models.Project, error)
 		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
-		DeleteProject(ctx context.Context, id int64) error
+		DeleteProject(ctx context.Context, id uint64) error
 	}
 	Task interface {
 		CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error)
@@ -92,9 +100,19 @@ type (
 
 func NewService(
 	cfg *config.Config, log *logrus.Logger,
-	repo *repository.Repository, generator RandomTokenGenerator,
-	mailer Mailer,
-) *Service {
+	repo *repository.Repository, mailer Mailer,
+) (*Service, error) {
+	var generator RandomTokenGenerator
+	var err error
+	generator, err = password.NewGenerator(&password.GeneratorInput{
+		LowerLetters: passwordAllowedLowerLetters,
+		UpperLetters: passwordAllowedUpperLetters,
+		Digits:       passwordAllowedDigits,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create random symbols generator")
+	}
+
 	authenticationLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "authentication-svc"})
 	verificationLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "verification-svc"})
 
@@ -108,5 +126,5 @@ func NewService(
 		UserAuthorization:  NewAuthorizationService(cfg, repo),
 		Verification:       NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),
 		Mailer:             mailer,
-	}
+	}, nil
 }

@@ -38,12 +38,12 @@ type (
 		Delete(ctx context.Context, id int64) error
 	}
 	Project interface {
-		CreateProject(ctx context.Context, project models.ProjectToCreate) (int64, error)
-		GetProjectByID(ctx context.Context, id int64) (models.Project, error)
-		UpdateProject(ctx context.Context, id int64, project models.ProjectToUpdate) error
+		CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error)
+		GetProjectByID(ctx context.Context, id uint64) (*models.Project, error)
+		UpdateProject(ctx context.Context, project models.ProjectToUpdate) error
 		GetAllProjects(ctx context.Context) ([]models.Project, error)
 		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
-		DeleteProject(ctx context.Context, id int64) error
+		DeleteProject(ctx context.Context, id uint64) error
 	}
 	Task interface {
 		CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error)

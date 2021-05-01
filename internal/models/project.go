@@ -2,33 +2,29 @@ package models
 
 type (
 	ProjectToCreate struct {
-		Title              string `json:"title" binding:"required"`
-		Description        string `json:"description"`
-		AssigneeID         int64  `json:"assigneeId" binding:"required"`
-		ImportanceStatusID int64  `json:"importanceStatusId" binding:"required"`
-		ProgressStatusID   int64  `json:"progressStatusId" binding:"required"`
+		Name        string `json:"name" binding:"required"`
+		Description string `json:"description"`
 	}
 
 	ProjectToUpdate struct {
-		ProjectToCreate
+		ID          uint64 `json:"id" binding:"required"`
+		Name        string `json:"name" binding:"required"`
+		Description string `json:"description"`
+		Owner       uint64 `json:"owner" binding:"required"`
 	}
 
 	Project struct {
-		ID                 int64  `json:"id" db:"id"`
-		Title              string `json:"title" db:"title"`
-		Description        string `json:"description" db:"description"`
-		AssigneeID         int64  `json:"assigneeId" db:"assignee_id"`
-		ImportanceStatusID int64  `json:"importanceStatusId" db:"importance_status_id"`
-		ProgressStatusID   int64  `json:"progressStatusId" db:"progress_status_id"`
+		ID          uint64 `json:"id" db:"id"`
+		Name        string `json:"name" db:"name"`
+		Description string `json:"description" db:"description"`
+		Owner       uint64 `json:"owner" db:"owner"`
 	}
 
 	ProjectParams struct {
-		ID                 *int64  `json:"id"`
-		Title              *string `json:"title"`
-		Description        *string `json:"description"`
-		AssigneeID         *int64  `json:"assigneeId"`
-		ImportanceStatusID *int64  `json:"importanceStatusId"`
-		ProgressStatusID   *int64  `json:"progressStatusId"`
+		ID          *uint64 `json:"id"`
+		Name        *string `json:"name"`
+		Description *string `json:"description"`
+		Owner       *uint64 `json:"owner"`
 	}
 
 	ProjectWithTasks struct {

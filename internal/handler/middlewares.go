@@ -48,7 +48,7 @@ func (h *Handler) UserAuthorizationMiddleware(c *gin.Context) {
 	if err == nil {
 		return
 	}
-	getLogEntry(c).Debug(err)
+	h.getLogEntry(c).Debug(err)
 
 	if err = h.validateTokenHeader(c); err != nil {
 		h.newErrorResponse(c, http.StatusUnauthorized, err)
@@ -66,7 +66,7 @@ func (h *Handler) UserAuthorizationMiddleware(c *gin.Context) {
 func (h *Handler) validateTokenCookieAndRefreshIfNeeded(c *gin.Context) error {
 	accessToken, err := h.Cookie(c, accessTokenCookieName)
 	if err != nil {
-		getLogEntry(c).Debug(err)
+		h.getLogEntry(c).Debug(err)
 		return h.refreshSessionByRefreshTokenCookie(c)
 	}
 
@@ -80,7 +80,7 @@ func (h *Handler) validateTokenCookieAndRefreshIfNeeded(c *gin.Context) error {
 		return h.refreshSessionByRefreshTokenCookie(c)
 	}
 
-	return setUserIDForContext(c, accessTokenClaims.Subject)
+	return h.validateAndSetUserIDForContext(c, accessTokenClaims.Subject)
 }
 
 func (h *Handler) refreshSessionByRefreshTokenCookie(c *gin.Context) error {
@@ -101,7 +101,7 @@ func (h *Handler) refreshSessionByRefreshTokenCookie(c *gin.Context) error {
 
 	h.setTokensCookies(c, newAccessToken, newRefreshToken)
 
-	return setUserIDForContext(c, accessTokenClaims.Subject)
+	return h.validateAndSetUserIDForContext(c, accessTokenClaims.Subject)
 }
 
 // validateTokenHeader gets accessToken from header and validate it.
@@ -119,29 +119,76 @@ func (h *Handler) validateTokenHeader(c *gin.Context) error {
 		return err
 	}
 
-	return setUserIDForContext(c, accessTokenClaims.Subject)
+	return h.validateAndSetUserIDForContext(c, accessTokenClaims.Subject)
 }
 
 func setHandlerNameToLogEntry(c *gin.Context, handlerName string) {
-	logEntryValue, _ := c.Get(ctxLogEntry)
+	logEntryValue, ok := c.Get(ctxLogEntry)
+	if !ok {
+		return
+	}
 
-	logEntry := logEntryValue.(*logrus.Entry).WithField("method", handlerName)
+	logEntry, ok := logEntryValue.(*logrus.Entry)
+	if !ok {
+		return
+	}
+
+	logEntry.WithField("method", handlerName)
 	c.Set(ctxLogEntry, logEntry)
 }
 
-func getLogEntry(c *gin.Context) *logrus.Entry {
-	logEntryValue, _ := c.Get(ctxLogEntry)
+func (h *Handler) getLogEntry(c *gin.Context) *logrus.Entry {
+	logEntryValue, ok := c.Get(ctxLogEntry)
+	if !ok {
+		return logrus.NewEntry(h.log)
+	}
 
-	return logEntryValue.(*logrus.Entry)
+	logEntry, ok := logEntryValue.(*logrus.Entry)
+	if !ok {
+		return logrus.NewEntry(h.log)
+	}
+
+	return logEntry
 }
 
-func setUserIDForContext(c *gin.Context, userIDStr string) error {
+func (h *Handler) validateAndSetUserIDForContext(c *gin.Context, userIDStr string) error {
 	userID, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
+		return err
+	}
+
+	if err = h.validateUserID(c, userID); err != nil {
 		return err
 	}
 
 	c.Set(ctxUserID, userID)
 
 	return nil
+}
+
+func (h *Handler) validateUserID(c *gin.Context, userID uint64) error {
+	user, err := h.svc.User.GetUserByID(c, userID)
+	if err != nil {
+		return err
+	}
+
+	if user == nil {
+		return ErrUserNotFound
+	}
+
+	return nil
+}
+
+func getUserIDFromContext(c *gin.Context) (uint64, error) {
+	userIDValue, ok := c.Get(ctxUserID)
+	if !ok {
+		return 0, errors.New("failed to get user id from context")
+	}
+
+	userID, ok := userIDValue.(uint64)
+	if !ok {
+		return 0, errors.Errorf("user id from context has not valid type: %T", userIDValue)
+	}
+
+	return userID, nil
 }

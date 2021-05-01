@@ -16,7 +16,13 @@ func (h *Handler) CreateProject(c *gin.Context) {
 		return
 	}
 
-	id, err := h.svc.Project.CreateProject(c, project)
+	owner, err := getUserIDFromContext(c)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	id, err := h.svc.Project.CreateProject(c, project, owner)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -28,7 +34,7 @@ func (h *Handler) CreateProject(c *gin.Context) {
 }
 
 func (h *Handler) GetProjectByID(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return
@@ -40,23 +46,22 @@ func (h *Handler) GetProjectByID(c *gin.Context) {
 		return
 	}
 
+	if project == nil {
+		c.Status(http.StatusNoContent)
+		return
+	}
+
 	c.JSON(http.StatusOK, project)
 }
 
 func (h *Handler) UpdateProject(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
-		return
-	}
-
 	var project models.ProjectToUpdate
 	if err := c.BindJSON(&project); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	if err := h.svc.Project.UpdateProject(c, id, project); err != nil {
+	if err := h.svc.Project.UpdateProject(c, project); err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -125,7 +130,7 @@ func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 		return
 	}
 
-	tasksToProject := make(map[int64][]models.Task)
+	tasksToProject := make(map[uint64][]models.Task)
 	for _, taskWithProjectID := range tasksWithProjectID {
 		tasksToProject[taskWithProjectID.ProjectID] = append(
 			tasksToProject[taskWithProjectID.ProjectID], taskWithProjectID.Task,
@@ -149,7 +154,7 @@ func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 }
 
 func (h *Handler) DeleteProject(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return

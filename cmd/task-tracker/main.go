@@ -17,14 +17,7 @@ import (
 	"github.com/l-orlov/task-tracker/internal/service"
 	"github.com/l-orlov/task-tracker/pkg/logger"
 	_ "github.com/lib/pq"
-	"github.com/sethvargo/go-password/password"
 	"github.com/sirupsen/logrus"
-)
-
-const (
-	passwordAllowedLowerLetters = "abcdefghijklmnopqrstuvwxyz"
-	passwordAllowedUpperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	passwordAllowedDigits       = "0123456789"
 )
 
 func main() {
@@ -60,20 +53,15 @@ func main() {
 		log.Fatalf("failed to create repository: %v", err)
 	}
 
-	randomSymbolsGenerator, err := password.NewGenerator(&password.GeneratorInput{
-		LowerLetters: passwordAllowedLowerLetters,
-		UpperLetters: passwordAllowedUpperLetters,
-		Digits:       passwordAllowedDigits,
-	})
-	if err != nil {
-		log.Fatalf("failed to create random symbols generator: %v", err)
-	}
-
 	mailerLogEntry := logrus.NewEntry(lg).WithFields(logrus.Fields{"source": "mailerService"})
 	mailer := service.NewMailerService(cfg.Mailer, mailerLogEntry)
 	defer mailer.Close()
 
-	svc := service.NewService(cfg, lg, repo, randomSymbolsGenerator, mailer)
+	svc, err := service.NewService(cfg, lg, repo, mailer)
+	if err != nil {
+		log.Fatalf("failed to create service: %v", err)
+	}
+
 	h := handler.New(cfg, lg, svc)
 
 	srv := server.New(cfg.Port, h.InitRoutes())

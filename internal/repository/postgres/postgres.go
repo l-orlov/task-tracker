@@ -9,8 +9,8 @@ import (
 
 const (
 	usersTable            = "users"
-	importanceStatusTable = "importance_status"
-	progressStatusTable   = "progress_status"
+	importanceStatusTable = "importance_statuses"
+	progressStatusTable   = "progress_statuses"
 	projectsTable         = "projects"
 	tasksTable            = "tasks"
 	projectsTasksTable    = "projects_tasks"

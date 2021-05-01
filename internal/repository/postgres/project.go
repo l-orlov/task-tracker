@@ -2,8 +2,11 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/l-orlov/task-tracker/internal/models"
@@ -21,21 +24,19 @@ func NewProjectPostgres(db *sqlx.DB, dbTimeout time.Duration) *ProjectPostgres {
 	}
 }
 
-func (r *ProjectPostgres) CreateProject(ctx context.Context, project models.ProjectToCreate) (int64, error) {
+func (r *ProjectPostgres) CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error) {
 	query := fmt.Sprintf(`
-INSERT INTO %s (title, description, assignee_id, importance_status_id, progress_status_id)
-values ($1, $2, $3, $4, $5) RETURNING id`, projectsTable)
+INSERT INTO %s (name, description, owner) values ($1, $2, $3) RETURNING id`, projectsTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	row := r.db.QueryRowContext(dbCtx, query, project.Title, project.Description,
-		project.AssigneeID, project.ImportanceStatusID, project.ProgressStatusID)
+	row := r.db.QueryRowContext(dbCtx, query, project.Name, project.Description, owner)
 	if err := row.Err(); err != nil {
 		return 0, err
 	}
 
-	var id int64
+	var id uint64
 	if err := row.Scan(&id); err != nil {
 		return 0, err
 	}
@@ -43,30 +44,33 @@ values ($1, $2, $3, $4, $5) RETURNING id`, projectsTable)
 	return id, nil
 }
 
-func (r *ProjectPostgres) GetProjectByID(ctx context.Context, id int64) (models.Project, error) {
+func (r *ProjectPostgres) GetProjectByID(ctx context.Context, id uint64) (*models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, title, description, assignee_id, importance_status_id, progress_status_id
-FROM %s WHERE id=$1`, projectsTable)
+SELECT id, name, description, owner FROM %s WHERE id=$1`, projectsTable)
 	var project models.Project
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	err := r.db.GetContext(dbCtx, &project, query, id)
+	if err := r.db.GetContext(dbCtx, &project, query, &id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 
-	return project, err
+		return nil, err
+	}
+
+	return &project, nil
 }
 
-func (r *ProjectPostgres) UpdateProject(ctx context.Context, id int64, project models.ProjectToUpdate) error {
+func (r *ProjectPostgres) UpdateProject(ctx context.Context, project models.ProjectToUpdate) error {
 	query := fmt.Sprintf(`
-UPDATE %s SET title = $1, description = $2, assignee_id = $3, importance_status_id = $4,
-progress_status_id = $5 WHERE id = $6`, projectsTable)
+UPDATE %s SET name = $1, description = $2, owner = $3 WHERE id = $4`, projectsTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, project.Title, project.Description,
-		project.AssigneeID, project.ImportanceStatusID, project.ProgressStatusID, id)
+	_, err := r.db.ExecContext(dbCtx, query, project.Name, project.Description, project.Owner, project.ID)
 	if err != nil {
 		return err
 	}
@@ -76,8 +80,7 @@ progress_status_id = $5 WHERE id = $6`, projectsTable)
 
 func (r *ProjectPostgres) GetAllProjects(ctx context.Context) ([]models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, title, description, assignee_id, importance_status_id, progress_status_id
-FROM %s`, projectsTable)
+SELECT id, name, description, owner FROM %s`, projectsTable)
 	var projects []models.Project
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -90,14 +93,13 @@ FROM %s`, projectsTable)
 
 func (r *ProjectPostgres) GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, title, description, assignee_id, importance_status_id, progress_status_id
-FROM %s
-WHERE (id = $1 OR $1 is null) AND (title ILIKE $2 OR $2 is null) AND (description ILIKE $3 OR $3 is null) AND
-(assignee_id = $4 OR $4 is null) AND (importance_status_id = $5 OR $5 is null) AND (progress_status_id = $6 OR $6 is null)
+SELECT id, name, description, owner FROM %s
+WHERE (id = $1 OR $1 is null) AND (name ILIKE $2 OR $2 is null) AND
+(description ILIKE $3 OR $3 is null) AND (owner = $4 OR $4 is null) 
 ORDER BY id ASC`, projectsTable)
 
-	if params.Title != nil {
-		*params.Title = "%%" + *params.Title + "%%"
+	if params.Name != nil {
+		*params.Name = "%%" + *params.Name + "%%"
 	}
 
 	if params.Description != nil {
@@ -109,14 +111,14 @@ ORDER BY id ASC`, projectsTable)
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	err := r.db.SelectContext(dbCtx, &projects, query, params.ID, params.Title, params.Description,
-		params.AssigneeID, params.ImportanceStatusID, params.ProgressStatusID)
+	err := r.db.SelectContext(
+		dbCtx, &projects, query, params.ID, params.Name, params.Description, params.Owner,
+	)
 
 	return projects, err
 }
 
-// ToDo: add deleting tasks
-func (r *ProjectPostgres) DeleteProject(ctx context.Context, id int64) error {
+func (r *ProjectPostgres) DeleteProject(ctx context.Context, id uint64) error {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, projectsTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
