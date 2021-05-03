@@ -31,7 +31,7 @@ func (r *ProjectProgressStatusPostgres) Add(ctx context.Context, projectID uint6
 
 	row := r.db.QueryRowContext(dbCtx, query, &projectID, &statusID)
 	if err := row.Err(); err != nil {
-		return 0, err
+		return 0, getDBError(err)
 	}
 
 	var id int64
@@ -78,8 +78,7 @@ func (r *ProjectProgressStatusPostgres) Delete(ctx context.Context, id int64) er
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &id)
-	if err != nil {
+	if _, err := r.db.ExecContext(dbCtx, query, &id); err != nil {
 		return err
 	}
 

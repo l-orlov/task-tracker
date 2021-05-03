@@ -38,3 +38,15 @@ func (s *ProjectService) GetAllProjectsWithParameters(ctx context.Context, param
 func (s *ProjectService) DeleteProject(ctx context.Context, id uint64) error {
 	return s.repo.DeleteProject(ctx, id)
 }
+
+func (s *ProjectService) AddUserToProject(ctx context.Context, projectID, userID uint64) error {
+	return s.repo.AddUserToProject(ctx, projectID, userID)
+}
+
+func (s *ProjectService) GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.User, error) {
+	return s.repo.GetAllProjectUsers(ctx, projectID)
+}
+
+func (s *ProjectService) DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error {
+	return s.repo.DeleteUserFromProject(ctx, projectID, userID)
+}

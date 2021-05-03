@@ -65,7 +65,7 @@ func (h *Handler) UpdateTask(c *gin.Context) {
 func (h *Handler) GetAllTasksToProject(c *gin.Context) {
 	projectID, err := strconv.ParseUint(c.Query("projectId"), 10, 64)
 	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidProjectIDParameter)
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidProjectIDQueryParam)
 		return
 	}
 

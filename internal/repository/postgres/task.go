@@ -34,7 +34,7 @@ values ($1, $2, $3, $4, $5, $6) RETURNING id`, taskTable)
 	row := r.db.QueryRowContext(dbCtx, query, &task.ProjectID, &task.Title, &task.Description,
 		&task.AssigneeID, &task.ImportanceStatusID, &task.ProgressStatusID)
 	if err := row.Err(); err != nil {
-		return 0, err
+		return 0, getDBError(err)
 	}
 
 	var id uint64
@@ -144,8 +144,7 @@ func (r *TaskPostgres) DeleteTask(ctx context.Context, id uint64) error {
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &id)
-	if err != nil {
+	if _, err := r.db.ExecContext(dbCtx, query, &id); err != nil {
 		return err
 	}
 

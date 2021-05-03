@@ -32,7 +32,7 @@ INSERT INTO %s (name, description, owner) values ($1, $2, $3) RETURNING id`, pro
 
 	row := r.db.QueryRowContext(dbCtx, query, &project.Name, &project.Description, &owner)
 	if err := row.Err(); err != nil {
-		return 0, err
+		return 0, getDBError(err)
 	}
 
 	var id uint64
@@ -123,8 +123,50 @@ func (r *ProjectPostgres) DeleteProject(ctx context.Context, id uint64) error {
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &id)
-	if err != nil {
+	if _, err := r.db.ExecContext(dbCtx, query, &id); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *ProjectPostgres) AddUserToProject(ctx context.Context, projectID, userID uint64) error {
+	query := fmt.Sprintf(`INSERT INTO %s (project_id, user_id) values ($1, $2)`, projectUserTable)
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	if _, err := r.db.ExecContext(dbCtx, query, &projectID, &userID); err != nil {
+		return getDBError(err)
+	}
+
+	return nil
+}
+
+func (r *ProjectPostgres) GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.User, error) {
+	query := fmt.Sprintf(`
+SELECT u.id, u.email, u.firstname, u.lastname, u.is_email_confirmed
+FROM %s AS u INNER JOIN %s AS pu ON u.id = pu.user_id
+WHERE pu.project_id = $1`, userTable, projectUserTable)
+	var users []models.User
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	if err := r.db.SelectContext(dbCtx, &users, query, &projectID); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (r *ProjectPostgres) DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error {
+	query := fmt.Sprintf(`DELETE FROM %s WHERE project_id = $1 AND user_id = $2`, projectUserTable)
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	if _, err := r.db.ExecContext(dbCtx, query, &projectID, &userID); err != nil {
 		return err
 	}
 

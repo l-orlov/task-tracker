@@ -165,3 +165,66 @@ func (h *Handler) DeleteProject(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
+
+func (h *Handler) AddProjectUser(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
+		return
+	}
+
+	userID, err := strconv.ParseUint(c.Query("userId"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidUserIDQueryParam)
+		return
+	}
+
+	if err := h.svc.Project.AddUserToProject(c, id, userID); err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *Handler) GetAllProjectUsers(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
+		return
+	}
+
+	users, err := h.svc.Project.GetAllProjectUsers(c, id)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	if users == nil {
+		c.JSON(http.StatusOK, []struct{}{})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) DeleteProjectUser(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
+		return
+	}
+
+	userID, err := strconv.ParseUint(c.Query("userId"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidUserIDQueryParam)
+		return
+	}
+
+	if err := h.svc.Project.DeleteUserFromProject(c, id, userID); err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}

@@ -76,27 +76,27 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 CREATE TABLE nn_project_user
 (
     project_id BIGINT REFERENCES r_project (id) ON DELETE CASCADE NOT NULL,
-    user_id    BIGINT REFERENCES r_user (id) ON DELETE CASCADE    NOT NULL
+    user_id    BIGINT REFERENCES r_user (id) ON DELETE CASCADE    NOT NULL,
+    PRIMARY KEY (project_id, user_id)
 );
-CREATE INDEX idx_nn_project_user ON nn_project_user (project_id, user_id);
 
 -- importance_statuses for project tasks
 CREATE TABLE s_project_importance_status
 (
     id                   SERIAL PRIMARY KEY,
     project_id           BIGINT REFERENCES r_project (id) ON DELETE CASCADE        NOT NULL,
-    importance_status_id INT REFERENCES s_importance_status (id) ON DELETE CASCADE NOT NULL UNIQUE
+    importance_status_id INT REFERENCES s_importance_status (id) ON DELETE CASCADE NOT NULL
 );
-CREATE INDEX idx_s_project_importance_status ON s_project_importance_status (project_id, importance_status_id);
+CREATE UNIQUE INDEX idx_s_project_importance_status ON s_project_importance_status (project_id, importance_status_id);
 
 -- progress_statuses for project tasks
 CREATE TABLE s_project_progress_status
 (
     id                 SERIAL PRIMARY KEY,
     project_id         BIGINT REFERENCES r_project (id) ON DELETE CASCADE      NOT NULL,
-    progress_status_id INT REFERENCES s_progress_status (id) ON DELETE CASCADE NOT NULL UNIQUE
+    progress_status_id INT REFERENCES s_progress_status (id) ON DELETE CASCADE NOT NULL
 );
-CREATE INDEX idx_s_project_progress_status ON s_project_progress_status (project_id, progress_status_id);
+CREATE UNIQUE INDEX idx_s_project_progress_status ON s_project_progress_status (project_id, progress_status_id);
 
 -- tasks to project
 CREATE TABLE r_task
@@ -130,9 +130,9 @@ CREATE TABLE r_sprint
 CREATE TABLE nn_sprint_task
 (
     sprint_id BIGINT REFERENCES r_sprint (id) ON DELETE CASCADE NOT NULL,
-    task_id   BIGINT REFERENCES r_task (id) ON DELETE CASCADE   NOT NULL
+    task_id   BIGINT REFERENCES r_task (id) ON DELETE CASCADE   NOT NULL,
+    PRIMARY KEY (sprint_id, task_id)
 );
-CREATE INDEX idx_nn_sprint_task ON nn_sprint_task (sprint_id, task_id);
 
 -- insert default values
 INSERT INTO s_importance_status (name)
