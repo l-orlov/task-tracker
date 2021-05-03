@@ -16,7 +16,13 @@ func (h *Handler) CreateProject(c *gin.Context) {
 		return
 	}
 
-	id, err := h.svc.Project.CreateProject(c, project)
+	owner, err := getUserIDFromContext(c)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	id, err := h.svc.Project.CreateProject(c, project, owner)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -28,7 +34,7 @@ func (h *Handler) CreateProject(c *gin.Context) {
 }
 
 func (h *Handler) GetProjectByID(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return
@@ -40,23 +46,22 @@ func (h *Handler) GetProjectByID(c *gin.Context) {
 		return
 	}
 
+	if project == nil {
+		c.Status(http.StatusNoContent)
+		return
+	}
+
 	c.JSON(http.StatusOK, project)
 }
 
 func (h *Handler) UpdateProject(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
-		return
-	}
-
 	var project models.ProjectToUpdate
 	if err := c.BindJSON(&project); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	if err := h.svc.Project.UpdateProject(c, id, project); err != nil {
+	if err := h.svc.Project.UpdateProject(c, project); err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -66,6 +71,27 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 
 func (h *Handler) GetAllProjects(c *gin.Context) {
 	projects, err := h.svc.Project.GetAllProjects(c)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	if projects == nil {
+		c.JSON(http.StatusOK, []struct{}{})
+		return
+	}
+
+	c.JSON(http.StatusOK, projects)
+}
+
+func (h *Handler) GetAllProjectsToUser(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	projects, err := h.svc.Project.GetAllProjectsToUser(c, userID)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -102,8 +128,8 @@ func (h *Handler) GetAllProjectsWithParameters(c *gin.Context) {
 
 func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 	var (
-		projects           []models.Project
-		tasksWithProjectID []models.TaskWithProjectID
+		projects []models.Project
+		tasks    []models.Task
 	)
 
 	g, gCtx := errgroup.WithContext(c)
@@ -116,7 +142,7 @@ func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 
 	g.Go(func() error {
 		var err error
-		tasksWithProjectID, err = h.svc.Task.GetAllTasksWithProjectID(gCtx)
+		tasks, err = h.svc.Task.GetAllTasks(gCtx)
 		return err
 	})
 
@@ -125,11 +151,9 @@ func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 		return
 	}
 
-	tasksToProject := make(map[int64][]models.Task)
-	for _, taskWithProjectID := range tasksWithProjectID {
-		tasksToProject[taskWithProjectID.ProjectID] = append(
-			tasksToProject[taskWithProjectID.ProjectID], taskWithProjectID.Task,
-		)
+	tasksToProject := make(map[uint64][]models.Task)
+	for _, task := range tasks {
+		tasksToProject[task.ProjectID] = append(tasksToProject[task.ProjectID], task)
 	}
 
 	projectsWithTasks := make([]models.ProjectWithTasks, len(projects))
@@ -149,13 +173,76 @@ func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
 }
 
 func (h *Handler) DeleteProject(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return
 	}
 
 	if err := h.svc.Project.DeleteProject(c, id); err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *Handler) AddUserToProject(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
+		return
+	}
+
+	userID, err := strconv.ParseUint(c.Query("userId"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidUserIDQueryParam)
+		return
+	}
+
+	if err := h.svc.Project.AddUserToProject(c, id, userID); err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *Handler) GetAllProjectUsers(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
+		return
+	}
+
+	users, err := h.svc.Project.GetAllProjectUsers(c, id)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	if users == nil {
+		c.JSON(http.StatusOK, []struct{}{})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) DeleteUserFromProject(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
+		return
+	}
+
+	userID, err := strconv.ParseUint(c.Query("userId"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidUserIDQueryParam)
+		return
+	}
+
+	if err := h.svc.Project.DeleteUserFromProject(c, id, userID); err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}

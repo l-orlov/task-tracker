@@ -19,7 +19,7 @@ func (s *ProgressStatusService) Create(ctx context.Context, status models.Status
 	return s.repo.Create(ctx, status)
 }
 
-func (s *ProgressStatusService) GetByID(ctx context.Context, id int64) (models.Status, error) {
+func (s *ProgressStatusService) GetByID(ctx context.Context, id int64) (*models.Status, error) {
 	return s.repo.GetByID(ctx, id)
 }
 

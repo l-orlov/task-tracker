@@ -9,19 +9,13 @@ import (
 )
 
 func (h *Handler) CreateTaskToProject(c *gin.Context) {
-	projectID, err := strconv.ParseInt(c.Query("projectId"), 10, 64)
-	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidProjectIDParameter)
-		return
-	}
-
 	var task models.TaskToCreate
 	if err := c.BindJSON(&task); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	id, err := h.svc.Task.CreateTaskToProject(c, projectID, task)
+	id, err := h.svc.Task.CreateTaskToProject(c, task)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -33,7 +27,7 @@ func (h *Handler) CreateTaskToProject(c *gin.Context) {
 }
 
 func (h *Handler) GetTaskByID(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return
@@ -45,23 +39,22 @@ func (h *Handler) GetTaskByID(c *gin.Context) {
 		return
 	}
 
+	if task == nil {
+		c.Status(http.StatusNoContent)
+		return
+	}
+
 	c.JSON(http.StatusOK, task)
 }
 
 func (h *Handler) UpdateTask(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
-		return
-	}
-
 	var task models.TaskToUpdate
 	if err := c.BindJSON(&task); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	if err := h.svc.Task.UpdateTask(c, id, task); err != nil {
+	if err := h.svc.Task.UpdateTask(c, task); err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -70,9 +63,9 @@ func (h *Handler) UpdateTask(c *gin.Context) {
 }
 
 func (h *Handler) GetAllTasksToProject(c *gin.Context) {
-	projectID, err := strconv.ParseInt(c.Query("projectId"), 10, 64)
+	projectID, err := strconv.ParseUint(c.Query("projectId"), 10, 64)
 	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidProjectIDParameter)
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidProjectIDQueryParam)
 		return
 	}
 
@@ -112,7 +105,7 @@ func (h *Handler) GetAllTasksWithParameters(c *gin.Context) {
 }
 
 func (h *Handler) DeleteTask(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return

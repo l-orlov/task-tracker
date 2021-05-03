@@ -89,7 +89,7 @@ func (h *Handler) Logout(c *gin.Context) {
 
 	accessToken, err := h.Cookie(c, accessTokenCookieName)
 	if err != nil {
-		getLogEntry(c).Debug(err)
+		h.getLogEntry(c).Debug(err)
 	}
 
 	if accessToken == "" {
@@ -154,7 +154,7 @@ func (h *Handler) setTokensCookies(c *gin.Context, accessToken, refreshToken str
 			"/", h.cfg.Cookie.Domain, false, true,
 		)
 	} else {
-		getLogEntry(c).Error(err)
+		h.getLogEntry(c).Error(err)
 	}
 
 	if encodedRefreshToken, err := h.options.SecureCookie.Encode(refreshTokenCookieName, refreshToken); err == nil {
@@ -163,7 +163,7 @@ func (h *Handler) setTokensCookies(c *gin.Context, accessToken, refreshToken str
 			"/", h.cfg.Cookie.Domain, false, true,
 		)
 	} else {
-		getLogEntry(c).Error(err)
+		h.getLogEntry(c).Error(err)
 	}
 }
 

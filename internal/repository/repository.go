@@ -25,34 +25,61 @@ type (
 	}
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (models.Status, error)
+		GetByID(ctx context.Context, id int64) (*models.Status, error)
 		Update(ctx context.Context, id int64, status models.StatusToCreate) error
 		GetAll(ctx context.Context) ([]models.Status, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	ProgressStatus interface {
 		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (models.Status, error)
+		GetByID(ctx context.Context, id int64) (*models.Status, error)
 		Update(ctx context.Context, id int64, status models.StatusToCreate) error
 		GetAll(ctx context.Context) ([]models.Status, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	Project interface {
-		CreateProject(ctx context.Context, project models.ProjectToCreate) (int64, error)
-		GetProjectByID(ctx context.Context, id int64) (models.Project, error)
-		UpdateProject(ctx context.Context, id int64, project models.ProjectToUpdate) error
+		CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error)
+		GetProjectByID(ctx context.Context, id uint64) (*models.Project, error)
+		UpdateProject(ctx context.Context, project models.ProjectToUpdate) error
 		GetAllProjects(ctx context.Context) ([]models.Project, error)
+		GetAllProjectsToUser(ctx context.Context, userID uint64) ([]models.Project, error)
 		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
-		DeleteProject(ctx context.Context, id int64) error
+		DeleteProject(ctx context.Context, id uint64) error
+		AddUserToProject(ctx context.Context, projectID, userID uint64) error
+		GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.ProjectUser, error)
+		DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error
+	}
+	ProjectImportanceStatus interface {
+		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProjectImportanceStatus, error)
+		GetAll(ctx context.Context) ([]models.ProjectImportanceStatus, error)
+		Delete(ctx context.Context, id int64) error
+	}
+	ProjectProgressStatus interface {
+		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProjectProgressStatus, error)
+		GetAll(ctx context.Context) ([]models.ProjectProgressStatus, error)
+		Delete(ctx context.Context, id int64) error
 	}
 	Task interface {
-		CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error)
-		GetTaskByID(ctx context.Context, id int64) (models.Task, error)
-		UpdateTask(ctx context.Context, id int64, task models.TaskToUpdate) error
-		GetAllTasksToProject(ctx context.Context, id int64) ([]models.Task, error)
+		CreateTaskToProject(ctx context.Context, task models.TaskToCreate) (uint64, error)
+		GetTaskByID(ctx context.Context, id uint64) (*models.Task, error)
+		UpdateTask(ctx context.Context, task models.TaskToUpdate) error
+		GetAllTasksToProject(ctx context.Context, id uint64) ([]models.Task, error)
 		GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error)
-		GetAllTasksWithProjectID(ctx context.Context) ([]models.TaskWithProjectID, error)
-		DeleteTask(ctx context.Context, id int64) error
+		GetAllTasks(ctx context.Context) ([]models.Task, error)
+		DeleteTask(ctx context.Context, id uint64) error
+	}
+	Sprint interface {
+		CreateSprintToProject(ctx context.Context, sprint models.SprintToCreate) (uint64, error)
+		GetSprintByID(ctx context.Context, id uint64) (*models.Sprint, error)
+		GetAllSprintsToProject(ctx context.Context, projectID uint64) ([]models.Sprint, error)
+		GetAllSprintsWithParameters(ctx context.Context, params models.SprintParams) ([]models.Sprint, error)
+		CloseSprint(ctx context.Context, id uint64) error
+		DeleteSprint(ctx context.Context, id uint64) error
+		AddTaskToSprint(ctx context.Context, sprintID, taskID uint64) error
+		GetAllSprintTasks(ctx context.Context, sprintID uint64) ([]models.Task, error)
+		DeleteTaskFromSprint(ctx context.Context, sprintID, taskID uint64) error
 	}
 	SessionCache interface {
 		PutSessionAndAccessToken(session models.Session, refreshToken string) error
@@ -78,7 +105,10 @@ type (
 		ImportanceStatus
 		ProgressStatus
 		Project
+		ProjectImportanceStatus
+		ProjectProgressStatus
 		Task
+		Sprint
 		SessionCache
 		VerificationCache
 	}
@@ -88,6 +118,7 @@ func NewRepository(
 	cfg *config.Config, log *logrus.Logger, db *sqlx.DB,
 ) (*Repository, error) {
 	dbTimeout := cfg.PostgresDB.Timeout.Duration()
+	pgLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "postgres"})
 
 	cacheLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "cache-redis"})
 	cacheOptions := cacheredis.Options{
@@ -100,12 +131,15 @@ func NewRepository(
 	cache := cacheredis.New(cfg.Redis, cacheLogEntry, cacheOptions)
 
 	return &Repository{
-		User:              postgres.NewUserPostgres(db, dbTimeout),
-		ImportanceStatus:  postgres.NewImportanceStatusPostgres(db, dbTimeout),
-		ProgressStatus:    postgres.NewProgressStatusPostgres(db, dbTimeout),
-		Project:           postgres.NewProjectPostgres(db, dbTimeout),
-		Task:              postgres.NewTaskPostgres(db, dbTimeout),
-		SessionCache:      cache,
-		VerificationCache: cache,
+		User:                    postgres.NewUserPostgres(db, dbTimeout),
+		ImportanceStatus:        postgres.NewImportanceStatusPostgres(db, dbTimeout),
+		ProgressStatus:          postgres.NewProgressStatusPostgres(db, dbTimeout),
+		Project:                 postgres.NewProjectPostgres(db, dbTimeout, pgLogEntry),
+		ProjectImportanceStatus: postgres.NewProjectImportanceStatusPostgres(db, dbTimeout),
+		ProjectProgressStatus:   postgres.NewProjectProgressStatusPostgres(db, dbTimeout),
+		Task:                    postgres.NewTaskPostgres(db, dbTimeout),
+		Sprint:                  postgres.NewSprintPostgres(db, dbTimeout),
+		SessionCache:            cache,
+		VerificationCache:       cache,
 	}, nil
 }

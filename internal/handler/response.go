@@ -14,7 +14,7 @@ type errorResponse struct {
 }
 
 func (h *Handler) newErrorResponse(c *gin.Context, statusCode int, err error) {
-	logEntry := getLogEntry(c)
+	logEntry := h.getLogEntry(c)
 
 	if customErr, ok := err.(*ierrors.Error); ok {
 		handleCustomError(c, logEntry, customErr)

@@ -2,11 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/l-orlov/task-tracker/internal/models"
+	"github.com/pkg/errors"
 )
 
 type ImportanceStatusPostgres struct {
@@ -27,9 +29,9 @@ func (r *ImportanceStatusPostgres) Create(ctx context.Context, status models.Sta
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	row := r.db.QueryRowContext(dbCtx, query, status.Name)
+	row := r.db.QueryRowContext(dbCtx, query, &status.Name)
 	if err := row.Err(); err != nil {
-		return 0, err
+		return 0, getDBError(err)
 	}
 
 	var id int64
@@ -40,16 +42,22 @@ func (r *ImportanceStatusPostgres) Create(ctx context.Context, status models.Sta
 	return id, nil
 }
 
-func (r *ImportanceStatusPostgres) GetByID(ctx context.Context, id int64) (models.Status, error) {
+func (r *ImportanceStatusPostgres) GetByID(ctx context.Context, id int64) (*models.Status, error) {
 	query := fmt.Sprintf(`SELECT id, name FROM %s WHERE id=$1`, importanceStatusTable)
 	var status models.Status
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	err := r.db.GetContext(dbCtx, &status, query, id)
+	if err := r.db.GetContext(dbCtx, &status, query, &id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 
-	return status, err
+		return nil, err
+	}
+
+	return &status, nil
 }
 
 func (r *ImportanceStatusPostgres) Update(ctx context.Context, id int64, status models.StatusToCreate) error {
@@ -58,7 +66,7 @@ func (r *ImportanceStatusPostgres) Update(ctx context.Context, id int64, status 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, status.Name, id)
+	_, err := r.db.ExecContext(dbCtx, query, &status.Name, &id)
 	if err != nil {
 		return err
 	}
@@ -84,8 +92,7 @@ func (r *ImportanceStatusPostgres) Delete(ctx context.Context, id int64) error {
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, id)
-	if err != nil {
+	if _, err := r.db.ExecContext(dbCtx, query, &id); err != nil {
 		return err
 	}
 

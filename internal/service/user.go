@@ -65,6 +65,15 @@ func (s *UserService) UpdateUser(ctx context.Context, user models.User) error {
 }
 
 func (s *UserService) SetUserPassword(ctx context.Context, userID uint64, password string) error {
+	user, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if user == nil {
+		return ierrors.NewBusiness(ErrUserNotFound, "")
+	}
+
 	hashedPassword, err := models.HashPassword(password)
 	if err != nil {
 		return ierrors.New(err)

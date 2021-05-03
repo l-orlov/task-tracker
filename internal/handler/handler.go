@@ -71,11 +71,11 @@ func (h *Handler) InitRoutes() http.Handler {
 			users.POST("/", h.CreateUser)
 			users.GET("/", h.GetAllUsers)
 			users.GET("/with-params", h.GetAllUsersWithParameters)
-			users.GET("/by-id/:id", h.GetUserByID)
+			users.GET("/:id", h.GetUserByID)
 			users.PUT("/", h.UpdateUser)
 			users.PUT("/set-password", h.SetUserPassword)
 			users.PUT("/change-password", h.ChangeUserPassword)
-			users.DELETE("/by-id/:id", h.DeleteUser)
+			users.DELETE("/:id", h.DeleteUser)
 		}
 
 		importanceStatuses := api.Group("/importance")
@@ -100,11 +100,31 @@ func (h *Handler) InitRoutes() http.Handler {
 		{
 			projects.POST("/", h.CreateProject)
 			projects.GET("/", h.GetAllProjects)
+			projects.GET("/to-user", h.GetAllProjectsToUser)
 			projects.GET("/with-params", h.GetAllProjectsWithParameters)
 			projects.GET("/with-tasks", h.GetAllProjectsWithTasks)
-			projects.GET("/by-id/:id", h.GetProjectByID)
-			projects.PUT("/:id", h.UpdateProject)
+			projects.GET("/:id", h.GetProjectByID)
+			projects.PUT("/", h.UpdateProject)
 			projects.DELETE("/:id", h.DeleteProject)
+			projects.POST("/:id/users", h.AddUserToProject)
+			projects.GET("/:id/users", h.GetAllProjectUsers)
+			projects.DELETE("/:id/users", h.DeleteUserFromProject)
+		}
+
+		projectImportanceStatuses := api.Group("/project-importance")
+		{
+			projectImportanceStatuses.POST("/", h.AddProjectImportanceStatus)
+			projectImportanceStatuses.GET("/", h.GetAllProjectImportanceStatuses)
+			projectImportanceStatuses.GET("/:id", h.GetProjectImportanceStatusByID)
+			projectImportanceStatuses.DELETE("/:id", h.DeleteProjectImportanceStatus)
+		}
+
+		projectProgressStatuses := api.Group("/project-progress")
+		{
+			projectProgressStatuses.POST("/", h.AddProjectProgressStatus)
+			projectProgressStatuses.GET("/", h.GetAllProjectProgressStatuses)
+			projectProgressStatuses.GET("/:id", h.GetProjectProgressStatusByID)
+			projectProgressStatuses.DELETE("/:id", h.DeleteProjectProgressStatus)
 		}
 
 		tasks := api.Group("tasks")
@@ -112,9 +132,22 @@ func (h *Handler) InitRoutes() http.Handler {
 			tasks.POST("/", h.CreateTaskToProject)
 			tasks.GET("/", h.GetAllTasksToProject)
 			tasks.GET("/with-params", h.GetAllTasksWithParameters)
-			tasks.GET("/by-id/:id", h.GetTaskByID)
-			tasks.PUT("/:id", h.UpdateTask)
+			tasks.GET("/:id", h.GetTaskByID)
+			tasks.PUT("/", h.UpdateTask)
 			tasks.DELETE("/:id", h.DeleteTask)
+		}
+
+		sprints := api.Group("/sprints")
+		{
+			sprints.POST("/", h.CreateSprintToProject)
+			sprints.GET("/", h.GetAllSprintsToProject)
+			sprints.GET("/with-params", h.GetAllSprintsWithParameters)
+			sprints.GET("/:id", h.GetSprintByID)
+			sprints.PUT("/:id/close", h.CloseSprint)
+			sprints.DELETE("/:id", h.DeleteSprint)
+			sprints.POST("/:id/tasks", h.AddTaskToSprint)
+			sprints.GET("/:id/tasks", h.GetAllSprintTasks)
+			sprints.DELETE("/:id/tasks", h.DeleteTaskFromSprint)
 		}
 	}
 

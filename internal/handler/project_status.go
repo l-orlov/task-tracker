@@ -8,14 +8,14 @@ import (
 	"github.com/l-orlov/task-tracker/internal/models"
 )
 
-func (h *Handler) CreateImportanceStatus(c *gin.Context) {
-	var status models.StatusToCreate
+func (h *Handler) AddProjectImportanceStatus(c *gin.Context) {
+	var status models.ProjectImportanceStatusToAdd
 	if err := c.BindJSON(&status); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	id, err := h.svc.ImportanceStatus.Create(c, status)
+	id, err := h.svc.ProjectImportanceStatus.Add(c, status.ProjectID, status.ImportanceStatusID)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -26,14 +26,14 @@ func (h *Handler) CreateImportanceStatus(c *gin.Context) {
 	})
 }
 
-func (h *Handler) GetImportanceStatusByID(c *gin.Context) {
+func (h *Handler) GetProjectImportanceStatusByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return
 	}
 
-	status, err := h.svc.ImportanceStatus.GetByID(c, id)
+	status, err := h.svc.ProjectImportanceStatus.GetByID(c, id)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -47,29 +47,8 @@ func (h *Handler) GetImportanceStatusByID(c *gin.Context) {
 	c.JSON(http.StatusOK, status)
 }
 
-func (h *Handler) UpdateImportanceStatus(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
-		return
-	}
-
-	var status models.StatusToCreate
-	if err := c.BindJSON(&status); err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, err)
-		return
-	}
-
-	if err := h.svc.ImportanceStatus.Update(c, id, status); err != nil {
-		h.newErrorResponse(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	c.Status(http.StatusOK)
-}
-
-func (h *Handler) GetAllImportanceStatuses(c *gin.Context) {
-	statuses, err := h.svc.ImportanceStatus.GetAll(c)
+func (h *Handler) GetAllProjectImportanceStatuses(c *gin.Context) {
+	statuses, err := h.svc.ProjectImportanceStatus.GetAll(c)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -83,14 +62,14 @@ func (h *Handler) GetAllImportanceStatuses(c *gin.Context) {
 	c.JSON(http.StatusOK, statuses)
 }
 
-func (h *Handler) DeleteImportanceStatus(c *gin.Context) {
+func (h *Handler) DeleteProjectImportanceStatus(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return
 	}
 
-	if err := h.svc.ImportanceStatus.Delete(c, id); err != nil {
+	if err := h.svc.ProjectImportanceStatus.Delete(c, id); err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -98,14 +77,14 @@ func (h *Handler) DeleteImportanceStatus(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func (h *Handler) CreateProgressStatus(c *gin.Context) {
-	var status models.StatusToCreate
+func (h *Handler) AddProjectProgressStatus(c *gin.Context) {
+	var status models.ProjectProgressStatusToAdd
 	if err := c.BindJSON(&status); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	id, err := h.svc.ProgressStatus.Create(c, status)
+	id, err := h.svc.ProjectProgressStatus.Add(c, status.ProjectID, status.ProgressStatusID)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -116,14 +95,14 @@ func (h *Handler) CreateProgressStatus(c *gin.Context) {
 	})
 }
 
-func (h *Handler) GetProgressStatusByID(c *gin.Context) {
+func (h *Handler) GetProjectProgressStatusByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return
 	}
 
-	status, err := h.svc.ProgressStatus.GetByID(c, id)
+	status, err := h.svc.ProjectProgressStatus.GetByID(c, id)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -137,29 +116,8 @@ func (h *Handler) GetProgressStatusByID(c *gin.Context) {
 	c.JSON(http.StatusOK, status)
 }
 
-func (h *Handler) UpdateProgressStatus(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
-		return
-	}
-
-	var status models.StatusToCreate
-	if err := c.BindJSON(&status); err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, err)
-		return
-	}
-
-	if err := h.svc.ProgressStatus.Update(c, id, status); err != nil {
-		h.newErrorResponse(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	c.Status(http.StatusOK)
-}
-
-func (h *Handler) GetAllProgressStatuses(c *gin.Context) {
-	statuses, err := h.svc.ProgressStatus.GetAll(c)
+func (h *Handler) GetAllProjectProgressStatuses(c *gin.Context) {
+	statuses, err := h.svc.ProjectProgressStatus.GetAll(c)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -173,14 +131,14 @@ func (h *Handler) GetAllProgressStatuses(c *gin.Context) {
 	c.JSON(http.StatusOK, statuses)
 }
 
-func (h *Handler) DeleteProgressStatus(c *gin.Context) {
+func (h *Handler) DeleteProjectProgressStatus(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
 		return
 	}
 
-	if err := h.svc.ProgressStatus.Delete(c, id); err != nil {
+	if err := h.svc.ProjectProgressStatus.Delete(c, id); err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}

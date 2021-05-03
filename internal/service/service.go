@@ -7,7 +7,15 @@ import (
 	"github.com/l-orlov/task-tracker/internal/config"
 	"github.com/l-orlov/task-tracker/internal/models"
 	"github.com/l-orlov/task-tracker/internal/repository"
+	"github.com/pkg/errors"
+	"github.com/sethvargo/go-password/password"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	passwordAllowedLowerLetters = "abcdefghijklmnopqrstuvwxyz"
+	passwordAllowedUpperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	passwordAllowedDigits       = "0123456789"
 )
 
 type (
@@ -28,34 +36,61 @@ type (
 	}
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (models.Status, error)
+		GetByID(ctx context.Context, id int64) (*models.Status, error)
 		Update(ctx context.Context, id int64, status models.StatusToCreate) error
 		GetAll(ctx context.Context) ([]models.Status, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	ProgressStatus interface {
 		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (models.Status, error)
+		GetByID(ctx context.Context, id int64) (*models.Status, error)
 		Update(ctx context.Context, id int64, status models.StatusToCreate) error
 		GetAll(ctx context.Context) ([]models.Status, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	Project interface {
-		CreateProject(ctx context.Context, project models.ProjectToCreate) (int64, error)
-		GetProjectByID(ctx context.Context, id int64) (models.Project, error)
-		UpdateProject(ctx context.Context, id int64, project models.ProjectToUpdate) error
+		CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error)
+		GetProjectByID(ctx context.Context, id uint64) (*models.Project, error)
+		UpdateProject(ctx context.Context, project models.ProjectToUpdate) error
 		GetAllProjects(ctx context.Context) ([]models.Project, error)
+		GetAllProjectsToUser(ctx context.Context, userID uint64) ([]models.Project, error)
 		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
-		DeleteProject(ctx context.Context, id int64) error
+		DeleteProject(ctx context.Context, id uint64) error
+		AddUserToProject(ctx context.Context, projectID, userID uint64) error
+		GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.ProjectUser, error)
+		DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error
+	}
+	ProjectImportanceStatus interface {
+		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProjectImportanceStatus, error)
+		GetAll(ctx context.Context) ([]models.ProjectImportanceStatus, error)
+		Delete(ctx context.Context, id int64) error
+	}
+	ProjectProgressStatus interface {
+		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProjectProgressStatus, error)
+		GetAll(ctx context.Context) ([]models.ProjectProgressStatus, error)
+		Delete(ctx context.Context, id int64) error
 	}
 	Task interface {
-		CreateTaskToProject(ctx context.Context, projectID int64, task models.TaskToCreate) (int64, error)
-		GetTaskByID(ctx context.Context, id int64) (models.Task, error)
-		UpdateTask(ctx context.Context, id int64, task models.TaskToUpdate) error
-		GetAllTasksToProject(ctx context.Context, id int64) ([]models.Task, error)
+		CreateTaskToProject(ctx context.Context, task models.TaskToCreate) (uint64, error)
+		GetTaskByID(ctx context.Context, id uint64) (*models.Task, error)
+		UpdateTask(ctx context.Context, task models.TaskToUpdate) error
+		GetAllTasksToProject(ctx context.Context, id uint64) ([]models.Task, error)
 		GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error)
-		GetAllTasksWithProjectID(ctx context.Context) ([]models.TaskWithProjectID, error)
-		DeleteTask(ctx context.Context, id int64) error
+		GetAllTasks(ctx context.Context) ([]models.Task, error)
+		DeleteTask(ctx context.Context, id uint64) error
+	}
+	Sprint interface {
+		CreateSprintToProject(ctx context.Context, sprint models.SprintToCreate) (uint64, error)
+		GetSprintByID(ctx context.Context, id uint64) (*models.Sprint, error)
+		GetAllSprintsToProject(ctx context.Context, projectID uint64) ([]models.Sprint, error)
+		GetAllSprintsWithParameters(ctx context.Context, params models.SprintParams) ([]models.Sprint, error)
+		CloseSprint(ctx context.Context, id uint64) error
+		DeleteSprint(ctx context.Context, id uint64) error
+		AddTaskToSprint(ctx context.Context, sprintID, taskID uint64) error
+		GetAllSprintTasks(ctx context.Context, sprintID uint64) ([]models.Task, error)
+		DeleteTaskFromSprint(ctx context.Context, sprintID, taskID uint64) error
 	}
 	UserAuthentication interface {
 		AuthenticateUserByEmail(ctx context.Context, email, password, fingerprint string) (userID uint64, err error)
@@ -82,7 +117,10 @@ type (
 		ImportanceStatus
 		ProgressStatus
 		Project
+		ProjectImportanceStatus
+		ProjectProgressStatus
 		Task
+		Sprint
 		UserAuthentication
 		UserAuthorization
 		Verification
@@ -92,21 +130,34 @@ type (
 
 func NewService(
 	cfg *config.Config, log *logrus.Logger,
-	repo *repository.Repository, generator RandomTokenGenerator,
-	mailer Mailer,
-) *Service {
+	repo *repository.Repository, mailer Mailer,
+) (*Service, error) {
+	var generator RandomTokenGenerator
+	var err error
+	generator, err = password.NewGenerator(&password.GeneratorInput{
+		LowerLetters: passwordAllowedLowerLetters,
+		UpperLetters: passwordAllowedUpperLetters,
+		Digits:       passwordAllowedDigits,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create random symbols generator")
+	}
+
 	authenticationLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "authentication-svc"})
 	verificationLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "verification-svc"})
 
 	return &Service{
-		User:               NewUserService(repo.User, cfg.JWT.AccessTokenLifetime.Duration()),
-		ImportanceStatus:   NewImportanceStatusService(repo.ImportanceStatus),
-		ProgressStatus:     NewProgressStatusService(repo.ProgressStatus),
-		Project:            NewProjectService(repo.Project),
-		Task:               NewTaskService(repo.Task),
-		UserAuthentication: NewAuthenticationService(cfg, authenticationLogEntry, repo),
-		UserAuthorization:  NewAuthorizationService(cfg, repo),
-		Verification:       NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),
-		Mailer:             mailer,
-	}
+		User:                    NewUserService(repo.User, cfg.JWT.AccessTokenLifetime.Duration()),
+		ImportanceStatus:        NewImportanceStatusService(repo.ImportanceStatus),
+		ProgressStatus:          NewProgressStatusService(repo.ProgressStatus),
+		Project:                 NewProjectService(repo.Project),
+		ProjectImportanceStatus: NewProjectImportanceStatusService(repo.ProjectImportanceStatus),
+		ProjectProgressStatus:   NewProjectProgressStatusService(repo.ProjectProgressStatus),
+		Task:                    NewTaskService(repo.Task),
+		Sprint:                  NewSprintService(repo.Sprint),
+		UserAuthentication:      NewAuthenticationService(cfg, authenticationLogEntry, repo),
+		UserAuthorization:       NewAuthorizationService(cfg, repo),
+		Verification:            NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),
+		Mailer:                  mailer,
+	}, nil
 }
