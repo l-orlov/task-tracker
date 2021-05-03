@@ -81,6 +81,17 @@ type (
 		GetAllTasks(ctx context.Context) ([]models.Task, error)
 		DeleteTask(ctx context.Context, id uint64) error
 	}
+	Sprint interface {
+		CreateSprintToProject(ctx context.Context, sprint models.SprintToCreate) (uint64, error)
+		GetSprintByID(ctx context.Context, id uint64) (*models.Sprint, error)
+		GetAllSprintsToProject(ctx context.Context, projectID uint64) ([]models.Sprint, error)
+		GetAllSprintsWithParameters(ctx context.Context, params models.SprintParams) ([]models.Sprint, error)
+		CloseSprint(ctx context.Context, id uint64) error
+		DeleteSprint(ctx context.Context, id uint64) error
+		AddTaskToSprint(ctx context.Context, sprintID, taskID uint64) error
+		GetAllSprintTasks(ctx context.Context, sprintID uint64) ([]models.Task, error)
+		DeleteTaskFromSprint(ctx context.Context, sprintID, taskID uint64) error
+	}
 	UserAuthentication interface {
 		AuthenticateUserByEmail(ctx context.Context, email, password, fingerprint string) (userID uint64, err error)
 	}
@@ -109,6 +120,7 @@ type (
 		ProjectImportanceStatus
 		ProjectProgressStatus
 		Task
+		Sprint
 		UserAuthentication
 		UserAuthorization
 		Verification
@@ -142,6 +154,7 @@ func NewService(
 		ProjectImportanceStatus: NewProjectImportanceStatusService(repo.ProjectImportanceStatus),
 		ProjectProgressStatus:   NewProjectProgressStatusService(repo.ProjectProgressStatus),
 		Task:                    NewTaskService(repo.Task),
+		Sprint:                  NewSprintService(repo.Sprint),
 		UserAuthentication:      NewAuthenticationService(cfg, authenticationLogEntry, repo),
 		UserAuthorization:       NewAuthorizationService(cfg, repo),
 		Verification:            NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),

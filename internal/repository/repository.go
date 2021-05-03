@@ -70,6 +70,17 @@ type (
 		GetAllTasks(ctx context.Context) ([]models.Task, error)
 		DeleteTask(ctx context.Context, id uint64) error
 	}
+	Sprint interface {
+		CreateSprintToProject(ctx context.Context, sprint models.SprintToCreate) (uint64, error)
+		GetSprintByID(ctx context.Context, id uint64) (*models.Sprint, error)
+		GetAllSprintsToProject(ctx context.Context, projectID uint64) ([]models.Sprint, error)
+		GetAllSprintsWithParameters(ctx context.Context, params models.SprintParams) ([]models.Sprint, error)
+		CloseSprint(ctx context.Context, id uint64) error
+		DeleteSprint(ctx context.Context, id uint64) error
+		AddTaskToSprint(ctx context.Context, sprintID, taskID uint64) error
+		GetAllSprintTasks(ctx context.Context, sprintID uint64) ([]models.Task, error)
+		DeleteTaskFromSprint(ctx context.Context, sprintID, taskID uint64) error
+	}
 	SessionCache interface {
 		PutSessionAndAccessToken(session models.Session, refreshToken string) error
 		GetSession(refreshToken string) (*models.Session, error)
@@ -97,6 +108,7 @@ type (
 		ProjectImportanceStatus
 		ProjectProgressStatus
 		Task
+		Sprint
 		SessionCache
 		VerificationCache
 	}
@@ -126,6 +138,7 @@ func NewRepository(
 		ProjectImportanceStatus: postgres.NewProjectImportanceStatusPostgres(db, dbTimeout),
 		ProjectProgressStatus:   postgres.NewProjectProgressStatusPostgres(db, dbTimeout),
 		Task:                    postgres.NewTaskPostgres(db, dbTimeout),
+		Sprint:                  postgres.NewSprintPostgres(db, dbTimeout),
 		SessionCache:            cache,
 		VerificationCache:       cache,
 	}, nil

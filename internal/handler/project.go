@@ -187,7 +187,7 @@ func (h *Handler) DeleteProject(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func (h *Handler) AddProjectUser(c *gin.Context) {
+func (h *Handler) AddUserToProject(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
@@ -229,7 +229,7 @@ func (h *Handler) GetAllProjectUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-func (h *Handler) DeleteProjectUser(c *gin.Context) {
+func (h *Handler) DeleteUserFromProject(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)

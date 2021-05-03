@@ -9,6 +9,7 @@ var (
 	ErrNotValidIDParameter         = errors.New("not valid id parameter")
 	ErrNotValidProjectIDQueryParam = errors.New("not valid projectId query param")
 	ErrNotValidUserIDQueryParam    = errors.New("not valid userId query param")
+	ErrNotValidTaskIDQueryParam    = errors.New("not valid taskId query param")
 	ErrEmptyEmailParameter         = errors.New("empty email parameter")
 	ErrEmptyTokenParameter         = errors.New("empty token parameter")
 	ErrUserNotFound                = errors.New("user not found")

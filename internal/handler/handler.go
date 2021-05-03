@@ -106,9 +106,9 @@ func (h *Handler) InitRoutes() http.Handler {
 			projects.GET("/:id", h.GetProjectByID)
 			projects.PUT("/", h.UpdateProject)
 			projects.DELETE("/:id", h.DeleteProject)
-			projects.POST("/:id/users", h.AddProjectUser)
+			projects.POST("/:id/users", h.AddUserToProject)
 			projects.GET("/:id/users", h.GetAllProjectUsers)
-			projects.DELETE("/:id/users", h.DeleteProjectUser)
+			projects.DELETE("/:id/users", h.DeleteUserFromProject)
 		}
 
 		projectImportanceStatuses := api.Group("/project-importance")
@@ -135,6 +135,19 @@ func (h *Handler) InitRoutes() http.Handler {
 			tasks.GET("/:id", h.GetTaskByID)
 			tasks.PUT("/", h.UpdateTask)
 			tasks.DELETE("/:id", h.DeleteTask)
+		}
+
+		sprints := api.Group("/sprints")
+		{
+			sprints.POST("/", h.CreateSprintToProject)
+			sprints.GET("/", h.GetAllSprintsToProject)
+			sprints.GET("/with-params", h.GetAllSprintsWithParameters)
+			sprints.GET("/:id", h.GetSprintByID)
+			sprints.PUT("/:id/close", h.CloseSprint)
+			sprints.DELETE("/:id", h.DeleteSprint)
+			sprints.POST("/:id/tasks", h.AddTaskToSprint)
+			sprints.GET("/:id/tasks", h.GetAllSprintTasks)
+			sprints.DELETE("/:id/tasks", h.DeleteTaskFromSprint)
 		}
 	}
 

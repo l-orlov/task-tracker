@@ -59,11 +59,11 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 CREATE TABLE r_project
 (
     id          BIGSERIAL PRIMARY KEY,
-    name        VARCHAR(255)                  NOT NULL,
-    description TEXT                          NOT NULL,
-    created_at  TIMESTAMPTZ                   NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ                   NOT NULL DEFAULT NOW(),
-    closed_at   TIMESTAMPTZ                   NOT NULL DEFAULT NOW()
+    name        VARCHAR(255) NOT NULL,
+    description TEXT         NOT NULL,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    closed_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 CREATE TRIGGER set_timestamp
     BEFORE UPDATE
@@ -77,7 +77,7 @@ CREATE TABLE nn_project_user
     project_id BIGINT REFERENCES r_project (id) ON DELETE CASCADE NOT NULL,
     user_id    BIGINT REFERENCES r_user (id) ON DELETE CASCADE    NOT NULL,
     is_owner   BOOLEAN                                            NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (project_id, user_id)
+    UNIQUE (project_id, user_id)
 );
 
 -- importance_statuses for project tasks
@@ -85,18 +85,18 @@ CREATE TABLE s_project_importance_status
 (
     id                   SERIAL PRIMARY KEY,
     project_id           BIGINT REFERENCES r_project (id) ON DELETE CASCADE        NOT NULL,
-    importance_status_id INT REFERENCES s_importance_status (id) ON DELETE CASCADE NOT NULL
+    importance_status_id INT REFERENCES s_importance_status (id) ON DELETE CASCADE NOT NULL,
+    UNIQUE (project_id, importance_status_id)
 );
-CREATE UNIQUE INDEX idx_s_project_importance_status ON s_project_importance_status (project_id, importance_status_id);
 
 -- progress_statuses for project tasks
 CREATE TABLE s_project_progress_status
 (
     id                 SERIAL PRIMARY KEY,
     project_id         BIGINT REFERENCES r_project (id) ON DELETE CASCADE      NOT NULL,
-    progress_status_id INT REFERENCES s_progress_status (id) ON DELETE CASCADE NOT NULL
+    progress_status_id INT REFERENCES s_progress_status (id) ON DELETE CASCADE NOT NULL,
+    UNIQUE (project_id, progress_status_id)
 );
-CREATE UNIQUE INDEX idx_s_project_progress_status ON s_project_progress_status (project_id, progress_status_id);
 
 -- tasks to project
 CREATE TABLE r_task
@@ -124,7 +124,7 @@ CREATE TABLE r_sprint
     id         BIGSERIAL PRIMARY KEY,
     project_id BIGINT REFERENCES r_project (id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMPTZ                                        NOT NULL DEFAULT NOW(),
-    closed_at  TIMESTAMPTZ                                        NOT NULL DEFAULT NOW()
+    closed_at  TIMESTAMPTZ
 );
 
 CREATE TABLE nn_sprint_task

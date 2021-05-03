@@ -48,7 +48,7 @@ values ($1, $2, $3, $4, $5, $6) RETURNING id`, taskTable)
 func (r *TaskPostgres) GetTaskByID(ctx context.Context, id uint64) (*models.Task, error) {
 	query := fmt.Sprintf(`
 SELECT id, project_id, title, description, assignee_id, importance_status_id, progress_status_id
-FROM %s WHERE id=$1`, taskTable)
+FROM %s WHERE id = $1`, taskTable)
 	var task models.Task
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)

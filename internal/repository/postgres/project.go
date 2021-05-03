@@ -70,7 +70,7 @@ INSERT INTO %s (project_id, user_id, is_owner) values ($1, $2, 'TRUE')`, project
 
 func (r *ProjectPostgres) GetProjectByID(ctx context.Context, id uint64) (*models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, name, description FROM %s WHERE id=$1`, projectTable)
+SELECT id, name, description FROM %s WHERE id = $1`, projectTable)
 	var project models.Project
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -168,7 +168,8 @@ func (r *ProjectPostgres) DeleteProject(ctx context.Context, id uint64) error {
 }
 
 func (r *ProjectPostgres) AddUserToProject(ctx context.Context, projectID, userID uint64) error {
-	query := fmt.Sprintf(`INSERT INTO %s (project_id, user_id, is_owner) values ($1, $2, 'FALSE')`, projectUserTable)
+	query := fmt.Sprintf(`
+INSERT INTO %s (project_id, user_id, is_owner) values ($1, $2, 'FALSE')`, projectUserTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
