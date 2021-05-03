@@ -44,13 +44,7 @@ func (h *Handler) InitMiddleware(c *gin.Context) {
 }
 
 func (h *Handler) UserAuthorizationMiddleware(c *gin.Context) {
-	err := h.validateTokenCookieAndRefreshIfNeeded(c)
-	if err == nil {
-		return
-	}
-	h.getLogEntry(c).Debug(err)
-
-	if err = h.validateTokenHeader(c); err != nil {
+	if err := h.validateTokenCookieAndRefreshIfNeeded(c); err != nil {
 		h.newErrorResponse(c, http.StatusUnauthorized, err)
 		return
 	}
@@ -100,24 +94,6 @@ func (h *Handler) refreshSessionByRefreshTokenCookie(c *gin.Context) error {
 	}
 
 	h.setTokensCookies(c, newAccessToken, newRefreshToken)
-
-	return h.validateAndSetUserIDForContext(c, accessTokenClaims.Subject)
-}
-
-// validateTokenHeader gets accessToken from header and validate it.
-// on success it puts accessToken data to ctx and returns nil. else it returns error.
-func (h *Handler) validateTokenHeader(c *gin.Context) error {
-	header := c.GetHeader("Authorization")
-	headerParts := strings.Split(header, " ")
-	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-		return ErrNotValidAuthorizationHeader
-	}
-
-	accessToken := headerParts[1]
-	accessTokenClaims, err := h.svc.UserAuthorization.ValidateAccessToken(accessToken)
-	if err != nil {
-		return err
-	}
 
 	return h.validateAndSetUserIDForContext(c, accessTokenClaims.Subject)
 }
@@ -191,4 +167,24 @@ func getUserIDFromContext(c *gin.Context) (uint64, error) {
 	}
 
 	return userID, nil
+}
+
+// NOT USEFUL CODE BELOW.
+
+// validateTokenHeader gets accessToken from header and validate it.
+// on success it puts accessToken data to ctx and returns nil. else it returns error.
+func (h *Handler) validateTokenHeader(c *gin.Context) error {
+	header := c.GetHeader("Authorization")
+	headerParts := strings.Split(header, " ")
+	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+		return ErrNotValidAuthorizationHeader
+	}
+
+	accessToken := headerParts[1]
+	accessTokenClaims, err := h.svc.UserAuthorization.ValidateAccessToken(accessToken)
+	if err != nil {
+		return err
+	}
+
+	return h.validateAndSetUserIDForContext(c, accessTokenClaims.Subject)
 }

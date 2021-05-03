@@ -56,6 +56,18 @@ type (
 		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
 		DeleteProject(ctx context.Context, id uint64) error
 	}
+	ProjectImportanceStatus interface {
+		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProjectImportanceStatus, error)
+		GetAll(ctx context.Context) ([]models.ProjectImportanceStatus, error)
+		Delete(ctx context.Context, id int64) error
+	}
+	ProjectProgressStatus interface {
+		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProjectProgressStatus, error)
+		GetAll(ctx context.Context) ([]models.ProjectProgressStatus, error)
+		Delete(ctx context.Context, id int64) error
+	}
 	Task interface {
 		CreateTaskToProject(ctx context.Context, task models.TaskToCreate) (uint64, error)
 		GetTaskByID(ctx context.Context, id uint64) (*models.Task, error)
@@ -90,6 +102,8 @@ type (
 		ImportanceStatus
 		ProgressStatus
 		Project
+		ProjectImportanceStatus
+		ProjectProgressStatus
 		Task
 		UserAuthentication
 		UserAuthorization
@@ -117,14 +131,16 @@ func NewService(
 	verificationLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "verification-svc"})
 
 	return &Service{
-		User:               NewUserService(repo.User, cfg.JWT.AccessTokenLifetime.Duration()),
-		ImportanceStatus:   NewImportanceStatusService(repo.ImportanceStatus),
-		ProgressStatus:     NewProgressStatusService(repo.ProgressStatus),
-		Project:            NewProjectService(repo.Project),
-		Task:               NewTaskService(repo.Task),
-		UserAuthentication: NewAuthenticationService(cfg, authenticationLogEntry, repo),
-		UserAuthorization:  NewAuthorizationService(cfg, repo),
-		Verification:       NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),
-		Mailer:             mailer,
+		User:                    NewUserService(repo.User, cfg.JWT.AccessTokenLifetime.Duration()),
+		ImportanceStatus:        NewImportanceStatusService(repo.ImportanceStatus),
+		ProgressStatus:          NewProgressStatusService(repo.ProgressStatus),
+		Project:                 NewProjectService(repo.Project),
+		ProjectImportanceStatus: NewProjectImportanceStatusService(repo.ProjectImportanceStatus),
+		ProjectProgressStatus:   NewProjectProgressStatusService(repo.ProjectProgressStatus),
+		Task:                    NewTaskService(repo.Task),
+		UserAuthentication:      NewAuthenticationService(cfg, authenticationLogEntry, repo),
+		UserAuthorization:       NewAuthorizationService(cfg, repo),
+		Verification:            NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),
+		Mailer:                  mailer,
 	}, nil
 }

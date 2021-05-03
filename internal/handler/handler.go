@@ -107,13 +107,29 @@ func (h *Handler) InitRoutes() http.Handler {
 			projects.DELETE("/:id", h.DeleteProject)
 		}
 
+		projectImportanceStatuses := api.Group("/project-importance")
+		{
+			projectImportanceStatuses.POST("/", h.AddProjectImportanceStatus)
+			projectImportanceStatuses.GET("/", h.GetAllProjectImportanceStatuses)
+			projectImportanceStatuses.GET("/:id", h.GetProjectImportanceStatusByID)
+			projectImportanceStatuses.DELETE("/:id", h.DeleteProjectImportanceStatus)
+		}
+
+		projectProgressStatuses := api.Group("/project-progress")
+		{
+			projectProgressStatuses.POST("/", h.AddProjectProgressStatus)
+			projectProgressStatuses.GET("/", h.GetAllProjectProgressStatuses)
+			projectProgressStatuses.GET("/:id", h.GetProjectProgressStatusByID)
+			projectProgressStatuses.DELETE("/:id", h.DeleteProjectProgressStatus)
+		}
+
 		tasks := api.Group("tasks")
 		{
 			tasks.POST("/", h.CreateTaskToProject)
 			tasks.GET("/", h.GetAllTasksToProject)
 			tasks.GET("/with-params", h.GetAllTasksWithParameters)
 			tasks.GET("/:id", h.GetTaskByID)
-			tasks.PUT("/:id", h.UpdateTask)
+			tasks.PUT("/", h.UpdateTask)
 			tasks.DELETE("/:id", h.DeleteTask)
 		}
 	}

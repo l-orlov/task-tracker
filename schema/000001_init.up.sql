@@ -31,7 +31,7 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 CREATE TABLE s_importance_status
 (
     id         SERIAL PRIMARY KEY,
-    name       VARCHAR(255) NOT NULL,
+    name       VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -45,7 +45,7 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 CREATE TABLE s_progress_status
 (
     id         SERIAL PRIMARY KEY,
-    name       VARCHAR(255) NOT NULL,
+    name       VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -85,7 +85,7 @@ CREATE TABLE s_project_importance_status
 (
     id                   SERIAL PRIMARY KEY,
     project_id           BIGINT REFERENCES r_project (id) ON DELETE CASCADE        NOT NULL,
-    importance_status_id INT REFERENCES s_importance_status (id) ON DELETE CASCADE NOT NULL
+    importance_status_id INT REFERENCES s_importance_status (id) ON DELETE CASCADE NOT NULL UNIQUE
 );
 CREATE INDEX idx_s_project_importance_status ON s_project_importance_status (project_id, importance_status_id);
 
@@ -94,7 +94,7 @@ CREATE TABLE s_project_progress_status
 (
     id                 SERIAL PRIMARY KEY,
     project_id         BIGINT REFERENCES r_project (id) ON DELETE CASCADE      NOT NULL,
-    progress_status_id INT REFERENCES s_progress_status (id) ON DELETE CASCADE NOT NULL
+    progress_status_id INT REFERENCES s_progress_status (id) ON DELETE CASCADE NOT NULL UNIQUE
 );
 CREATE INDEX idx_s_project_progress_status ON s_project_progress_status (project_id, progress_status_id);
 

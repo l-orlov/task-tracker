@@ -45,6 +45,18 @@ type (
 		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
 		DeleteProject(ctx context.Context, id uint64) error
 	}
+	ProjectImportanceStatus interface {
+		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProjectImportanceStatus, error)
+		GetAll(ctx context.Context) ([]models.ProjectImportanceStatus, error)
+		Delete(ctx context.Context, id int64) error
+	}
+	ProjectProgressStatus interface {
+		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProjectProgressStatus, error)
+		GetAll(ctx context.Context) ([]models.ProjectProgressStatus, error)
+		Delete(ctx context.Context, id int64) error
+	}
 	Task interface {
 		CreateTaskToProject(ctx context.Context, task models.TaskToCreate) (uint64, error)
 		GetTaskByID(ctx context.Context, id uint64) (*models.Task, error)
@@ -78,6 +90,8 @@ type (
 		ImportanceStatus
 		ProgressStatus
 		Project
+		ProjectImportanceStatus
+		ProjectProgressStatus
 		Task
 		SessionCache
 		VerificationCache
@@ -100,12 +114,14 @@ func NewRepository(
 	cache := cacheredis.New(cfg.Redis, cacheLogEntry, cacheOptions)
 
 	return &Repository{
-		User:              postgres.NewUserPostgres(db, dbTimeout),
-		ImportanceStatus:  postgres.NewImportanceStatusPostgres(db, dbTimeout),
-		ProgressStatus:    postgres.NewProgressStatusPostgres(db, dbTimeout),
-		Project:           postgres.NewProjectPostgres(db, dbTimeout),
-		Task:              postgres.NewTaskPostgres(db, dbTimeout),
-		SessionCache:      cache,
-		VerificationCache: cache,
+		User:                    postgres.NewUserPostgres(db, dbTimeout),
+		ImportanceStatus:        postgres.NewImportanceStatusPostgres(db, dbTimeout),
+		ProgressStatus:          postgres.NewProgressStatusPostgres(db, dbTimeout),
+		Project:                 postgres.NewProjectPostgres(db, dbTimeout),
+		ProjectImportanceStatus: postgres.NewProjectImportanceStatusPostgres(db, dbTimeout),
+		ProjectProgressStatus:   postgres.NewProjectProgressStatusPostgres(db, dbTimeout),
+		Task:                    postgres.NewTaskPostgres(db, dbTimeout),
+		SessionCache:            cache,
+		VerificationCache:       cache,
 	}, nil
 }
