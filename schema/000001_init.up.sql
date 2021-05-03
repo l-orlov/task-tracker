@@ -61,7 +61,6 @@ CREATE TABLE r_project
     id          BIGSERIAL PRIMARY KEY,
     name        VARCHAR(255)                  NOT NULL,
     description TEXT                          NOT NULL,
-    owner       BIGINT REFERENCES r_user (id) NOT NULL,
     created_at  TIMESTAMPTZ                   NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ                   NOT NULL DEFAULT NOW(),
     closed_at   TIMESTAMPTZ                   NOT NULL DEFAULT NOW()
@@ -77,6 +76,7 @@ CREATE TABLE nn_project_user
 (
     project_id BIGINT REFERENCES r_project (id) ON DELETE CASCADE NOT NULL,
     user_id    BIGINT REFERENCES r_user (id) ON DELETE CASCADE    NOT NULL,
+    is_owner   BOOLEAN                                            NOT NULL DEFAULT FALSE,
     PRIMARY KEY (project_id, user_id)
 );
 

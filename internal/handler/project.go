@@ -84,6 +84,27 @@ func (h *Handler) GetAllProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, projects)
 }
 
+func (h *Handler) GetAllProjectsToUser(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	projects, err := h.svc.Project.GetAllProjectsToUser(c, userID)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	if projects == nil {
+		c.JSON(http.StatusOK, []struct{}{})
+		return
+	}
+
+	c.JSON(http.StatusOK, projects)
+}
+
 func (h *Handler) GetAllProjectsWithParameters(c *gin.Context) {
 	var params models.ProjectParams
 	if err := c.BindJSON(&params); err != nil {

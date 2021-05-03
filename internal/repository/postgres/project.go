@@ -9,28 +9,45 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/l-orlov/task-tracker/internal/models"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type ProjectPostgres struct {
 	db        *sqlx.DB
 	dbTimeout time.Duration
+	log       *logrus.Entry
 }
 
-func NewProjectPostgres(db *sqlx.DB, dbTimeout time.Duration) *ProjectPostgres {
+func NewProjectPostgres(db *sqlx.DB, dbTimeout time.Duration, log *logrus.Entry) *ProjectPostgres {
 	return &ProjectPostgres{
 		db:        db,
 		dbTimeout: dbTimeout,
+		log:       log,
 	}
 }
 
-func (r *ProjectPostgres) CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error) {
-	query := fmt.Sprintf(`
-INSERT INTO %s (name, description, owner) values ($1, $2, $3) RETURNING id`, projectTable)
+func (r *ProjectPostgres) CreateProject(
+	ctx context.Context, project models.ProjectToCreate, owner uint64,
+) (uint64, error) {
+	createProjectQuery := fmt.Sprintf(`
+INSERT INTO %s (name, description) values ($1, $2) RETURNING id`, projectTable)
+	addProjectUserQuery := fmt.Sprintf(`
+INSERT INTO %s (project_id, user_id, is_owner) values ($1, $2, 'TRUE')`, projectUserTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	row := r.db.QueryRowContext(dbCtx, query, &project.Name, &project.Description, &owner)
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer func(tx *sql.Tx) {
+		if err := tx.Rollback(); err != nil {
+			r.log.Error(err)
+		}
+	}(tx)
+
+	row := r.db.QueryRowContext(dbCtx, createProjectQuery, &project.Name, &project.Description)
 	if err := row.Err(); err != nil {
 		return 0, getDBError(err)
 	}
@@ -40,12 +57,20 @@ INSERT INTO %s (name, description, owner) values ($1, $2, $3) RETURNING id`, pro
 		return 0, err
 	}
 
+	if _, err = tx.ExecContext(dbCtx, addProjectUserQuery, id, owner); err != nil {
+		return 0, err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return 0, err
+	}
+
 	return id, nil
 }
 
 func (r *ProjectPostgres) GetProjectByID(ctx context.Context, id uint64) (*models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, name, description, owner FROM %s WHERE id=$1`, projectTable)
+SELECT id, name, description FROM %s WHERE id=$1`, projectTable)
 	var project models.Project
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -64,12 +89,12 @@ SELECT id, name, description, owner FROM %s WHERE id=$1`, projectTable)
 
 func (r *ProjectPostgres) UpdateProject(ctx context.Context, project models.ProjectToUpdate) error {
 	query := fmt.Sprintf(`
-UPDATE %s SET name = $1, description = $2, owner = $3 WHERE id = $4`, projectTable)
+UPDATE %s SET name = $1, description = $2 WHERE id = $3`, projectTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &project.Name, &project.Description, &project.Owner, &project.ID)
+	_, err := r.db.ExecContext(dbCtx, query, &project.Name, &project.Description, &project.ID)
 	if err != nil {
 		return err
 	}
@@ -79,7 +104,7 @@ UPDATE %s SET name = $1, description = $2, owner = $3 WHERE id = $4`, projectTab
 
 func (r *ProjectPostgres) GetAllProjects(ctx context.Context) ([]models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, name, description, owner FROM %s`, projectTable)
+SELECT id, name, description FROM %s`, projectTable)
 	var projects []models.Project
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -90,11 +115,25 @@ SELECT id, name, description, owner FROM %s`, projectTable)
 	return projects, err
 }
 
+func (r *ProjectPostgres) GetAllProjectsToUser(ctx context.Context, userID uint64) ([]models.Project, error) {
+	query := fmt.Sprintf(`
+SELECT id, name, description
+FROM %s AS p INNER JOIN %s AS pu ON p.id = pu.project_id
+WHERE pu.user_id = $1`, projectTable, projectUserTable)
+	var projects []models.Project
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	err := r.db.SelectContext(dbCtx, &projects, query, &userID)
+
+	return projects, err
+}
+
 func (r *ProjectPostgres) GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, name, description, owner FROM %s
-WHERE (id = $1 OR $1 is null) AND (name ILIKE $2 OR $2 is null) AND
-(description ILIKE $3 OR $3 is null) AND (owner = $4 OR $4 is null) 
+SELECT id, name, description FROM %s
+WHERE (id = $1 OR $1 is null) AND (name ILIKE $2 OR $2 is null) AND (description ILIKE $3 OR $3 is null)
 ORDER BY id ASC`, projectTable)
 
 	if params.Name != nil {
@@ -110,9 +149,7 @@ ORDER BY id ASC`, projectTable)
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	err := r.db.SelectContext(
-		dbCtx, &projects, query, &params.ID, &params.Name, &params.Description, &params.Owner,
-	)
+	err := r.db.SelectContext(dbCtx, &projects, query, &params.ID, &params.Name, &params.Description)
 
 	return projects, err
 }
@@ -131,7 +168,7 @@ func (r *ProjectPostgres) DeleteProject(ctx context.Context, id uint64) error {
 }
 
 func (r *ProjectPostgres) AddUserToProject(ctx context.Context, projectID, userID uint64) error {
-	query := fmt.Sprintf(`INSERT INTO %s (project_id, user_id) values ($1, $2)`, projectUserTable)
+	query := fmt.Sprintf(`INSERT INTO %s (project_id, user_id, is_owner) values ($1, $2, 'FALSE')`, projectUserTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
@@ -143,12 +180,12 @@ func (r *ProjectPostgres) AddUserToProject(ctx context.Context, projectID, userI
 	return nil
 }
 
-func (r *ProjectPostgres) GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.User, error) {
+func (r *ProjectPostgres) GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.ProjectUser, error) {
 	query := fmt.Sprintf(`
-SELECT u.id, u.email, u.firstname, u.lastname, u.is_email_confirmed
+SELECT u.id, u.email, u.firstname, u.lastname, pu.is_owner
 FROM %s AS u INNER JOIN %s AS pu ON u.id = pu.user_id
 WHERE pu.project_id = $1`, userTable, projectUserTable)
-	var users []models.User
+	var users []models.ProjectUser
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()

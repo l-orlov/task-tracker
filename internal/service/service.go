@@ -53,10 +53,11 @@ type (
 		GetProjectByID(ctx context.Context, id uint64) (*models.Project, error)
 		UpdateProject(ctx context.Context, project models.ProjectToUpdate) error
 		GetAllProjects(ctx context.Context) ([]models.Project, error)
+		GetAllProjectsToUser(ctx context.Context, userID uint64) ([]models.Project, error)
 		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
 		DeleteProject(ctx context.Context, id uint64) error
 		AddUserToProject(ctx context.Context, projectID, userID uint64) error
-		GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.User, error)
+		GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.ProjectUser, error)
 		DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error
 	}
 	ProjectImportanceStatus interface {

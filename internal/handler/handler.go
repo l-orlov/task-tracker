@@ -100,6 +100,7 @@ func (h *Handler) InitRoutes() http.Handler {
 		{
 			projects.POST("/", h.CreateProject)
 			projects.GET("/", h.GetAllProjects)
+			projects.GET("/to-user", h.GetAllProjectsToUser)
 			projects.GET("/with-params", h.GetAllProjectsWithParameters)
 			projects.GET("/with-tasks", h.GetAllProjectsWithTasks)
 			projects.GET("/:id", h.GetProjectByID)
