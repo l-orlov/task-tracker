@@ -7,9 +7,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	ierrors "github.com/l-orlov/task-tracker/internal/errors"
 	"github.com/l-orlov/task-tracker/internal/models"
-	"github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 
@@ -50,7 +48,8 @@ VALUES ($1, $2, $3, $4) RETURNING id`, userTable)
 
 func (r *UserPostgres) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := fmt.Sprintf(`
-SELECT id, email, firstname, lastname, password FROM %s WHERE email=$1`, userTable)
+SELECT id, email, firstname, lastname, password, is_email_confirmed, avatar_url
+FROM %s WHERE email=$1`, userTable)
 	var user models.User
 	var err error
 
@@ -70,7 +69,8 @@ SELECT id, email, firstname, lastname, password FROM %s WHERE email=$1`, userTab
 
 func (r *UserPostgres) GetUserByID(ctx context.Context, id uint64) (*models.User, error) {
 	query := fmt.Sprintf(`
-SELECT id, email, firstname, lastname, password, is_email_confirmed FROM %s WHERE id=$1`, userTable)
+SELECT id, email, firstname, lastname, password, is_email_confirmed, avatar_url
+FROM %s WHERE id=$1`, userTable)
 	var user models.User
 	var err error
 
@@ -90,12 +90,13 @@ SELECT id, email, firstname, lastname, password, is_email_confirmed FROM %s WHER
 
 func (r *UserPostgres) UpdateUser(ctx context.Context, user models.User) error {
 	query := fmt.Sprintf(`
-UPDATE %s SET firstname = $1, lastname = $2 WHERE id = $3`, userTable)
+UPDATE %s SET firstname = $1, lastname = $2, avatar_url = $3 WHERE id = $4`, userTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &user.FirstName, &user.LastName, &user.ID)
+	_, err := r.db.ExecContext(dbCtx, query, &user.FirstName, &user.LastName,
+		&user.AvatarURL, &user.ID)
 	if err != nil {
 		return getDBError(err)
 	}
@@ -118,7 +119,7 @@ func (r *UserPostgres) UpdateUserPassword(ctx context.Context, userID uint64, pa
 
 func (r *UserPostgres) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	query := fmt.Sprintf(`
-SELECT id, email, firstname, lastname, is_email_confirmed FROM %s`, userTable)
+SELECT id, email, firstname, lastname, is_email_confirmed, avatar_url FROM %s`, userTable)
 	var users []models.User
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -133,7 +134,7 @@ SELECT id, email, firstname, lastname, is_email_confirmed FROM %s`, userTable)
 
 func (r *UserPostgres) GetAllUsersWithParameters(ctx context.Context, params models.UserParams) ([]models.User, error) {
 	query := fmt.Sprintf(`
-SELECT id, email, firstname, lastname, is_email_confirmed FROM %s
+SELECT id, email, firstname, lastname, is_email_confirmed, avatar_url FROM %s
 WHERE (id = $1 OR $1 is null) AND (email ILIKE $2 OR $2 is null) AND (firstname ILIKE $3 OR $3 is null) AND
 (lastname = $4 OR $4 is null) AND (is_email_confirmed = $5 OR $5 is null)
 ORDER BY id ASC`, userTable)
@@ -185,16 +186,4 @@ func (r *UserPostgres) ConfirmEmail(ctx context.Context, id uint64) error {
 	}
 
 	return nil
-}
-
-func getDBError(err error) error {
-	if err, ok := err.(*pq.Error); ok {
-		if err.Code.Class() < "50" { // business error
-			return ierrors.NewBusiness(err, err.Detail)
-		}
-
-		return ierrors.New(err)
-	}
-
-	return err
 }

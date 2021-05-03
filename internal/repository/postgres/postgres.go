@@ -5,6 +5,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/l-orlov/task-tracker/internal/config"
+	ierrors "github.com/l-orlov/task-tracker/internal/errors"
+	"github.com/lib/pq"
 )
 
 const (
@@ -36,4 +38,16 @@ func ConnectToDB(cfg config.PostgresDB) (*sqlx.DB, error) {
 func initConnectionString(cfg config.PostgresDB) string {
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Address.Host, cfg.Address.Port, cfg.User, cfg.Password, cfg.Database, cfg.SSLMode)
+}
+
+func getDBError(err error) error {
+	if err, ok := err.(*pq.Error); ok {
+		if err.Code.Class() < "50" { // business error
+			return ierrors.NewBusiness(err, err.Detail)
+		}
+
+		return ierrors.New(err)
+	}
+
+	return err
 }

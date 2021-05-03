@@ -23,6 +23,7 @@ type (
 		LastName         string `json:"lastName" binding:"required" db:"lastname"`
 		Password         string `json:"-" db:"password"`
 		IsEmailConfirmed bool   `json:"isEmailConfirmed" db:"is_email_confirmed"`
+		AvatarURL        string `json:"avatarURL" db:"avatar_url"`
 	}
 	UserPassword struct {
 		ID       uint64 `json:"id" binding:"required"`

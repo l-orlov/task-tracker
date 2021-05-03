@@ -14,10 +14,11 @@ CREATE TABLE r_user
 (
     id                 BIGSERIAL PRIMARY KEY,
     email              VARCHAR(320) NOT NULL UNIQUE,
-    firstname          VARCHAR(255) NOT NULL,
-    lastname           VARCHAR(255) NOT NULL,
-    password           VARCHAR(255) NOT NULL,
+    firstname          VARCHAR(255) NOT NULL DEFAULT '',
+    lastname           VARCHAR(255) NOT NULL DEFAULT '',
+    password           VARCHAR(255) NOT NULL DEFAULT '',
     is_email_confirmed BOOLEAN      NOT NULL DEFAULT FALSE,
+    avatar_url         VARCHAR(500) NOT NULL DEFAULT '',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at         TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
