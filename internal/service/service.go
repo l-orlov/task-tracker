@@ -49,8 +49,9 @@ type (
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.ImportanceStatusToCreate) (int64, error)
 		GetByID(ctx context.Context, id int64) (*models.ImportanceStatus, error)
-		Update(ctx context.Context, id int64, status models.ImportanceStatusToCreate) error
+		Update(ctx context.Context, status models.ImportanceStatusToUpdate) error
 		GetAll(ctx context.Context) ([]models.ImportanceStatus, error)
+		GetAllToProject(ctx context.Context, projectID uint64) ([]models.ImportanceStatus, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	ProgressStatus interface {

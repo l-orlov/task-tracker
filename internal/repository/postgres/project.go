@@ -9,20 +9,17 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/l-orlov/task-tracker/internal/models"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 type ProjectPostgres struct {
 	db        *sqlx.DB
 	dbTimeout time.Duration
-	log       *logrus.Entry
 }
 
-func NewProjectPostgres(db *sqlx.DB, dbTimeout time.Duration, log *logrus.Entry) *ProjectPostgres {
+func NewProjectPostgres(db *sqlx.DB, dbTimeout time.Duration) *ProjectPostgres {
 	return &ProjectPostgres{
 		db:        db,
 		dbTimeout: dbTimeout,
-		log:       log,
 	}
 }
 
@@ -41,11 +38,7 @@ INSERT INTO %s (project_id, user_id, is_owner) values ($1, $2, 'TRUE')`, project
 	if err != nil {
 		return 0, err
 	}
-	defer func(tx *sql.Tx) {
-		if err := tx.Rollback(); err != nil {
-			r.log.Error(err)
-		}
-	}(tx)
+	defer tx.Rollback()
 
 	row := r.db.QueryRowContext(dbCtx, createProjectQuery, &project.Name, &project.Description)
 	if err := row.Err(); err != nil {

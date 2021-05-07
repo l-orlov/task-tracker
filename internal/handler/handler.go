@@ -84,6 +84,7 @@ func (h *Handler) InitRoutes() http.Handler {
 		{
 			projects.POST("/", h.CreateProject)
 			projects.GET("/:id", h.GetProjectByID)
+			// projects.GET("/:id/board", h.GetProjectBoard)
 			projects.GET("/:id/to-user", h.GetProjectByIDToUser)
 			projects.GET("/", h.GetAllProjects)
 			projects.GET("/to-user", h.GetAllProjectsToUser)
@@ -100,7 +101,8 @@ func (h *Handler) InitRoutes() http.Handler {
 			importanceStatuses.POST("/", h.CreateImportanceStatus)
 			importanceStatuses.GET("/:id", h.GetImportanceStatusByID)
 			importanceStatuses.GET("/", h.GetAllImportanceStatuses)
-			importanceStatuses.PUT("/:id", h.UpdateImportanceStatus)
+			importanceStatuses.GET("/to-project", h.GetAllImportanceStatusesToProject)
+			importanceStatuses.PUT("/", h.UpdateImportanceStatus)
 			importanceStatuses.DELETE("/:id", h.DeleteImportanceStatus)
 		}
 

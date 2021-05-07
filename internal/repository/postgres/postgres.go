@@ -10,16 +10,12 @@ import (
 )
 
 const (
-	userTable                    = "r_user"
-	importanceStatusTable        = "s_importance_status"
-	progressStatusTable          = "s_progress_status"
-	projectTable                 = "r_project"
-	projectUserTable             = "nn_project_user"
-	projectImportanceStatusTable = "s_project_importance_status"
-	projectProgressStatusTable   = "s_project_progress_status"
-	taskTable                    = "r_task"
-	sprintTable                  = "r_sprint"
-	sprintTaskTable              = "nn_sprint_task"
+	userTable             = "r_user"
+	projectTable          = "r_project"
+	importanceStatusTable = "s_project_importance_status"
+	progressStatusTable   = "s_project_progress_status"
+	projectUserTable      = "nn_project_user"
+	taskTable             = "r_task"
 )
 
 func ConnectToDB(cfg config.PostgresDB) (*sqlx.DB, error) {

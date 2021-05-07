@@ -38,8 +38,9 @@ type (
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.ImportanceStatusToCreate) (int64, error)
 		GetByID(ctx context.Context, id int64) (*models.ImportanceStatus, error)
-		Update(ctx context.Context, id int64, status models.ImportanceStatusToCreate) error
+		Update(ctx context.Context, status models.ImportanceStatusToUpdate) error
 		GetAll(ctx context.Context) ([]models.ImportanceStatus, error)
+		GetAllToProject(ctx context.Context, projectID uint64) ([]models.ImportanceStatus, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	ProgressStatus interface {
@@ -92,7 +93,6 @@ func NewRepository(
 	cfg *config.Config, log *logrus.Logger, db *sqlx.DB,
 ) (*Repository, error) {
 	dbTimeout := cfg.PostgresDB.Timeout.Duration()
-	pgLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "postgres"})
 
 	cacheLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "cache-redis"})
 	cacheOptions := redis.Options{
@@ -106,7 +106,7 @@ func NewRepository(
 
 	return &Repository{
 		User:              postgres.NewUserPostgres(db, dbTimeout),
-		Project:           postgres.NewProjectPostgres(db, dbTimeout, pgLogEntry),
+		Project:           postgres.NewProjectPostgres(db, dbTimeout),
 		ImportanceStatus:  postgres.NewImportanceStatusPostgres(db, dbTimeout),
 		ProgressStatus:    postgres.NewProgressStatusPostgres(db, dbTimeout),
 		Task:              postgres.NewTaskPostgres(db, dbTimeout),
