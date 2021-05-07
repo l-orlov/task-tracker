@@ -23,7 +23,7 @@ func NewProgressStatusPostgres(db *sqlx.DB, dbTimeout time.Duration) *ProgressSt
 	}
 }
 
-func (r *ProgressStatusPostgres) Create(ctx context.Context, status models.StatusToCreate) (int64, error) {
+func (r *ProgressStatusPostgres) Create(ctx context.Context, status models.ProgressStatusToCreate) (int64, error) {
 	query := fmt.Sprintf(`INSERT INTO %s (name) values ($1) RETURNING id`, progressStatusTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -42,9 +42,9 @@ func (r *ProgressStatusPostgres) Create(ctx context.Context, status models.Statu
 	return id, nil
 }
 
-func (r *ProgressStatusPostgres) GetByID(ctx context.Context, id int64) (*models.Status, error) {
+func (r *ProgressStatusPostgres) GetByID(ctx context.Context, id int64) (*models.ProgressStatus, error) {
 	query := fmt.Sprintf(`SELECT id, name FROM %s WHERE id=$1`, progressStatusTable)
-	var status models.Status
+	var status models.ProgressStatus
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
@@ -60,7 +60,7 @@ func (r *ProgressStatusPostgres) GetByID(ctx context.Context, id int64) (*models
 	return &status, nil
 }
 
-func (r *ProgressStatusPostgres) Update(ctx context.Context, id int64, status models.StatusToCreate) error {
+func (r *ProgressStatusPostgres) Update(ctx context.Context, id int64, status models.ProgressStatusToCreate) error {
 	query := fmt.Sprintf(`UPDATE %s SET name = $1 WHERE id = $2`, progressStatusTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -74,9 +74,9 @@ func (r *ProgressStatusPostgres) Update(ctx context.Context, id int64, status mo
 	return nil
 }
 
-func (r *ProgressStatusPostgres) GetAll(ctx context.Context) ([]models.Status, error) {
+func (r *ProgressStatusPostgres) GetAll(ctx context.Context) ([]models.ProgressStatus, error) {
 	query := fmt.Sprintf(`SELECT id, name FROM %s`, progressStatusTable)
-	var statuses []models.Status
+	var statuses []models.ProgressStatus
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()

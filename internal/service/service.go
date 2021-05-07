@@ -34,20 +34,6 @@ type (
 		DeleteUser(ctx context.Context, id uint64) error
 		ConfirmEmail(ctx context.Context, id uint64) error
 	}
-	ImportanceStatus interface {
-		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (*models.Status, error)
-		Update(ctx context.Context, id int64, status models.StatusToCreate) error
-		GetAll(ctx context.Context) ([]models.Status, error)
-		Delete(ctx context.Context, id int64) error
-	}
-	ProgressStatus interface {
-		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (*models.Status, error)
-		Update(ctx context.Context, id int64, status models.StatusToCreate) error
-		GetAll(ctx context.Context) ([]models.Status, error)
-		Delete(ctx context.Context, id int64) error
-	}
 	Project interface {
 		CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error)
 		GetProjectByID(ctx context.Context, id uint64) (*models.Project, error)
@@ -60,16 +46,18 @@ type (
 		GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.ProjectUser, error)
 		DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error
 	}
-	ProjectImportanceStatus interface {
-		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
-		GetByID(ctx context.Context, id int64) (*models.ProjectImportanceStatus, error)
-		GetAll(ctx context.Context) ([]models.ProjectImportanceStatus, error)
+	ImportanceStatus interface {
+		Create(ctx context.Context, status models.ImportanceStatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ImportanceStatus, error)
+		Update(ctx context.Context, id int64, status models.ImportanceStatusToCreate) error
+		GetAll(ctx context.Context) ([]models.ImportanceStatus, error)
 		Delete(ctx context.Context, id int64) error
 	}
-	ProjectProgressStatus interface {
-		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
-		GetByID(ctx context.Context, id int64) (*models.ProjectProgressStatus, error)
-		GetAll(ctx context.Context) ([]models.ProjectProgressStatus, error)
+	ProgressStatus interface {
+		Create(ctx context.Context, status models.ProgressStatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProgressStatus, error)
+		Update(ctx context.Context, id int64, status models.ProgressStatusToCreate) error
+		GetAll(ctx context.Context) ([]models.ProgressStatus, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	Task interface {
@@ -80,17 +68,6 @@ type (
 		GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error)
 		GetAllTasks(ctx context.Context) ([]models.Task, error)
 		DeleteTask(ctx context.Context, id uint64) error
-	}
-	Sprint interface {
-		CreateSprintToProject(ctx context.Context, sprint models.SprintToCreate) (uint64, error)
-		GetSprintByID(ctx context.Context, id uint64) (*models.Sprint, error)
-		GetAllSprintsToProject(ctx context.Context, projectID uint64) ([]models.Sprint, error)
-		GetAllSprintsWithParameters(ctx context.Context, params models.SprintParams) ([]models.Sprint, error)
-		CloseSprint(ctx context.Context, id uint64) error
-		DeleteSprint(ctx context.Context, id uint64) error
-		AddTaskToSprint(ctx context.Context, sprintID, taskID uint64) error
-		GetAllSprintTasks(ctx context.Context, sprintID uint64) ([]models.Task, error)
-		DeleteTaskFromSprint(ctx context.Context, sprintID, taskID uint64) error
 	}
 	UserAuthentication interface {
 		AuthenticateUserByEmail(ctx context.Context, email, password, fingerprint string) (userID uint64, err error)
@@ -114,13 +91,10 @@ type (
 	}
 	Service struct {
 		User
+		Project
 		ImportanceStatus
 		ProgressStatus
-		Project
-		ProjectImportanceStatus
-		ProjectProgressStatus
 		Task
-		Sprint
 		UserAuthentication
 		UserAuthorization
 		Verification
@@ -147,17 +121,14 @@ func NewService(
 	verificationLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "verification-svc"})
 
 	return &Service{
-		User:                    NewUserService(repo.User, cfg.JWT.AccessTokenLifetime.Duration()),
-		ImportanceStatus:        NewImportanceStatusService(repo.ImportanceStatus),
-		ProgressStatus:          NewProgressStatusService(repo.ProgressStatus),
-		Project:                 NewProjectService(repo.Project),
-		ProjectImportanceStatus: NewProjectImportanceStatusService(repo.ProjectImportanceStatus),
-		ProjectProgressStatus:   NewProjectProgressStatusService(repo.ProjectProgressStatus),
-		Task:                    NewTaskService(repo.Task),
-		Sprint:                  NewSprintService(repo.Sprint),
-		UserAuthentication:      NewAuthenticationService(cfg, authenticationLogEntry, repo),
-		UserAuthorization:       NewAuthorizationService(cfg, repo),
-		Verification:            NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),
-		Mailer:                  mailer,
+		User:               NewUserService(repo.User, cfg.JWT.AccessTokenLifetime.Duration()),
+		Project:            NewProjectService(repo.Project),
+		ImportanceStatus:   NewImportanceStatusService(repo.ImportanceStatus),
+		ProgressStatus:     NewProgressStatusService(repo.ProgressStatus),
+		Task:               NewTaskService(repo.Task),
+		UserAuthentication: NewAuthenticationService(cfg, authenticationLogEntry, repo),
+		UserAuthorization:  NewAuthorizationService(cfg, repo),
+		Verification:       NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),
+		Mailer:             mailer,
 	}, nil
 }

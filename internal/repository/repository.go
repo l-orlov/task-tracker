@@ -6,8 +6,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/l-orlov/task-tracker/internal/config"
 	"github.com/l-orlov/task-tracker/internal/models"
-	cacheredis "github.com/l-orlov/task-tracker/internal/repository/cache-redis"
 	"github.com/l-orlov/task-tracker/internal/repository/postgres"
+	"github.com/l-orlov/task-tracker/internal/repository/redis"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,20 +23,6 @@ type (
 		DeleteUser(ctx context.Context, id uint64) error
 		ConfirmEmail(ctx context.Context, id uint64) error
 	}
-	ImportanceStatus interface {
-		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (*models.Status, error)
-		Update(ctx context.Context, id int64, status models.StatusToCreate) error
-		GetAll(ctx context.Context) ([]models.Status, error)
-		Delete(ctx context.Context, id int64) error
-	}
-	ProgressStatus interface {
-		Create(ctx context.Context, status models.StatusToCreate) (int64, error)
-		GetByID(ctx context.Context, id int64) (*models.Status, error)
-		Update(ctx context.Context, id int64, status models.StatusToCreate) error
-		GetAll(ctx context.Context) ([]models.Status, error)
-		Delete(ctx context.Context, id int64) error
-	}
 	Project interface {
 		CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error)
 		GetProjectByID(ctx context.Context, id uint64) (*models.Project, error)
@@ -49,16 +35,18 @@ type (
 		GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.ProjectUser, error)
 		DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error
 	}
-	ProjectImportanceStatus interface {
-		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
-		GetByID(ctx context.Context, id int64) (*models.ProjectImportanceStatus, error)
-		GetAll(ctx context.Context) ([]models.ProjectImportanceStatus, error)
+	ImportanceStatus interface {
+		Create(ctx context.Context, status models.ImportanceStatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ImportanceStatus, error)
+		Update(ctx context.Context, id int64, status models.ImportanceStatusToCreate) error
+		GetAll(ctx context.Context) ([]models.ImportanceStatus, error)
 		Delete(ctx context.Context, id int64) error
 	}
-	ProjectProgressStatus interface {
-		Add(ctx context.Context, projectID uint64, statusID int64) (int64, error)
-		GetByID(ctx context.Context, id int64) (*models.ProjectProgressStatus, error)
-		GetAll(ctx context.Context) ([]models.ProjectProgressStatus, error)
+	ProgressStatus interface {
+		Create(ctx context.Context, status models.ProgressStatusToCreate) (int64, error)
+		GetByID(ctx context.Context, id int64) (*models.ProgressStatus, error)
+		Update(ctx context.Context, id int64, status models.ProgressStatusToCreate) error
+		GetAll(ctx context.Context) ([]models.ProgressStatus, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	Task interface {
@@ -69,17 +57,6 @@ type (
 		GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error)
 		GetAllTasks(ctx context.Context) ([]models.Task, error)
 		DeleteTask(ctx context.Context, id uint64) error
-	}
-	Sprint interface {
-		CreateSprintToProject(ctx context.Context, sprint models.SprintToCreate) (uint64, error)
-		GetSprintByID(ctx context.Context, id uint64) (*models.Sprint, error)
-		GetAllSprintsToProject(ctx context.Context, projectID uint64) ([]models.Sprint, error)
-		GetAllSprintsWithParameters(ctx context.Context, params models.SprintParams) ([]models.Sprint, error)
-		CloseSprint(ctx context.Context, id uint64) error
-		DeleteSprint(ctx context.Context, id uint64) error
-		AddTaskToSprint(ctx context.Context, sprintID, taskID uint64) error
-		GetAllSprintTasks(ctx context.Context, sprintID uint64) ([]models.Task, error)
-		DeleteTaskFromSprint(ctx context.Context, sprintID, taskID uint64) error
 	}
 	SessionCache interface {
 		PutSessionAndAccessToken(session models.Session, refreshToken string) error
@@ -102,13 +79,10 @@ type (
 	}
 	Repository struct {
 		User
+		Project
 		ImportanceStatus
 		ProgressStatus
-		Project
-		ProjectImportanceStatus
-		ProjectProgressStatus
 		Task
-		Sprint
 		SessionCache
 		VerificationCache
 	}
@@ -121,25 +95,22 @@ func NewRepository(
 	pgLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "postgres"})
 
 	cacheLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "cache-redis"})
-	cacheOptions := cacheredis.Options{
+	cacheOptions := redis.Options{
 		AccessTokenLifetime:               int(cfg.JWT.AccessTokenLifetime.Duration().Seconds()),
 		RefreshTokenLifetime:              int(cfg.JWT.RefreshTokenLifetime.Duration().Seconds()),
 		UserBlockingLifetime:              int(cfg.UserBlocking.Lifetime.Duration().Seconds()),
 		EmailConfirmTokenLifetime:         int(cfg.Verification.EmailConfirmTokenLifetime.Duration().Seconds()),
 		PasswordResetConfirmTokenLifetime: int(cfg.Verification.PasswordResetConfirmTokenLifetime.Duration().Seconds()),
 	}
-	cache := cacheredis.New(cfg.Redis, cacheLogEntry, cacheOptions)
+	cache := redis.New(cfg.Redis, cacheLogEntry, cacheOptions)
 
 	return &Repository{
-		User:                    postgres.NewUserPostgres(db, dbTimeout),
-		ImportanceStatus:        postgres.NewImportanceStatusPostgres(db, dbTimeout),
-		ProgressStatus:          postgres.NewProgressStatusPostgres(db, dbTimeout),
-		Project:                 postgres.NewProjectPostgres(db, dbTimeout, pgLogEntry),
-		ProjectImportanceStatus: postgres.NewProjectImportanceStatusPostgres(db, dbTimeout),
-		ProjectProgressStatus:   postgres.NewProjectProgressStatusPostgres(db, dbTimeout),
-		Task:                    postgres.NewTaskPostgres(db, dbTimeout),
-		Sprint:                  postgres.NewSprintPostgres(db, dbTimeout),
-		SessionCache:            cache,
-		VerificationCache:       cache,
+		User:              postgres.NewUserPostgres(db, dbTimeout),
+		Project:           postgres.NewProjectPostgres(db, dbTimeout, pgLogEntry),
+		ImportanceStatus:  postgres.NewImportanceStatusPostgres(db, dbTimeout),
+		ProgressStatus:    postgres.NewProgressStatusPostgres(db, dbTimeout),
+		Task:              postgres.NewTaskPostgres(db, dbTimeout),
+		SessionCache:      cache,
+		VerificationCache: cache,
 	}, nil
 }

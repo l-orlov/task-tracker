@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -20,11 +20,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func main() {
-	cfg := &config.Config{}
-	var err error
-	if err = config.ReadFromFileAndSetEnv(os.Getenv("CONFIG_PATH"), cfg); err != nil {
-		log.Fatalf("failed to read config: %v", err)
+// Run initializes whole application
+func Run(configPath string) {
+	cfg, err := config.Init(configPath)
+	if err != nil {
+		log.Fatalf("failed to init config: %v", err)
 	}
 
 	lg, err := logger.New(cfg.Logger.Level, cfg.Logger.Format)
@@ -32,6 +32,7 @@ func main() {
 		log.Fatalf("failed to init logger: %v", err)
 	}
 
+	// Dependencies
 	db, err := postgres.ConnectToDB(cfg.PostgresDB)
 	if err != nil {
 		lg.Fatalf("failed to connect to db: %v", err)
@@ -48,6 +49,7 @@ func main() {
 		}
 	}
 
+	// Repo, Service & API Handlers
 	repo, err := repository.NewRepository(cfg, lg, db)
 	if err != nil {
 		log.Fatalf("failed to create repository: %v", err)
@@ -64,6 +66,7 @@ func main() {
 
 	h := handler.New(cfg, lg, svc)
 
+	// HTTP Server
 	srv := server.New(cfg.Port, h.InitRoutes())
 	go func() {
 		if err = srv.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -73,6 +76,7 @@ func main() {
 
 	lg.Infof("service started on port %s", cfg.Port)
 
+	// Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 	<-quit

@@ -23,7 +23,7 @@ func NewImportanceStatusPostgres(db *sqlx.DB, dbTimeout time.Duration) *Importan
 	}
 }
 
-func (r *ImportanceStatusPostgres) Create(ctx context.Context, status models.StatusToCreate) (int64, error) {
+func (r *ImportanceStatusPostgres) Create(ctx context.Context, status models.ImportanceStatusToCreate) (int64, error) {
 	query := fmt.Sprintf(`INSERT INTO %s (name) values ($1) RETURNING id`, importanceStatusTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -42,9 +42,9 @@ func (r *ImportanceStatusPostgres) Create(ctx context.Context, status models.Sta
 	return id, nil
 }
 
-func (r *ImportanceStatusPostgres) GetByID(ctx context.Context, id int64) (*models.Status, error) {
+func (r *ImportanceStatusPostgres) GetByID(ctx context.Context, id int64) (*models.ImportanceStatus, error) {
 	query := fmt.Sprintf(`SELECT id, name FROM %s WHERE id=$1`, importanceStatusTable)
-	var status models.Status
+	var status models.ImportanceStatus
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
@@ -60,7 +60,7 @@ func (r *ImportanceStatusPostgres) GetByID(ctx context.Context, id int64) (*mode
 	return &status, nil
 }
 
-func (r *ImportanceStatusPostgres) Update(ctx context.Context, id int64, status models.StatusToCreate) error {
+func (r *ImportanceStatusPostgres) Update(ctx context.Context, id int64, status models.ImportanceStatusToCreate) error {
 	query := fmt.Sprintf(`UPDATE %s SET name = $1 WHERE id = $2`, importanceStatusTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -74,9 +74,9 @@ func (r *ImportanceStatusPostgres) Update(ctx context.Context, id int64, status 
 	return nil
 }
 
-func (r *ImportanceStatusPostgres) GetAll(ctx context.Context) ([]models.Status, error) {
+func (r *ImportanceStatusPostgres) GetAll(ctx context.Context) ([]models.ImportanceStatus, error) {
 	query := fmt.Sprintf(`SELECT id, name FROM %s`, importanceStatusTable)
-	var statuses []models.Status
+	var statuses []models.ImportanceStatus
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()

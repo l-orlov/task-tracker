@@ -1,4 +1,4 @@
-package config
+package configreader
 
 import (
 	"time"
@@ -23,9 +23,9 @@ func (d *DurationConfig) Decode(value string) error {
 	return nil
 }
 
-func (d *DurationConfig) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+func (d *DurationConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var v interface{}
-	if err = unmarshal(&v); err != nil {
+	if err := unmarshal(&v); err != nil {
 		return err
 	}
 

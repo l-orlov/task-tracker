@@ -1,4 +1,4 @@
-package config
+package configreader
 
 import (
 	"fmt"
@@ -36,9 +36,9 @@ func (a *AddressConfig) Decode(value string) error {
 	return nil
 }
 
-func (a *AddressConfig) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+func (a *AddressConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var input string
-	if err = unmarshal(&input); err != nil {
+	if err := unmarshal(&input); err != nil {
 		return err
 	}
 
