@@ -1,13 +1,15 @@
--- naming relied on this article: http://citforum.ru/database/articles/naming_rule/
+-- naming relied ON this article: http://citforum.ru/database/articles/naming_rule/
 
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
-    RETURNS TRIGGER AS
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
 $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- users
 CREATE TABLE r_user
@@ -28,7 +30,7 @@ CREATE TRIGGER set_timestamp
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
--- projects to work on
+-- projects to work ON
 CREATE TABLE r_project
 (
     id          BIGSERIAL PRIMARY KEY,
@@ -80,7 +82,9 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 
 -- insert default statuses for new project
 CREATE OR REPLACE FUNCTION trigger_insert_default_project_statuses()
-    RETURNS TRIGGER AS
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
 $$
 BEGIN
     INSERT INTO s_project_importance_status (project_id, name)
@@ -93,9 +97,9 @@ BEGIN
            (NEW.id, 'IN PROGRESS', 1),
            (NEW.id, 'DONE', 2);
 
-    RETURN NULL;
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 CREATE TRIGGER insert_default_project_statuses
     AFTER INSERT
@@ -103,7 +107,7 @@ CREATE TRIGGER insert_default_project_statuses
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_insert_default_project_statuses();
 
--- users working on projects
+-- users working ON projects
 CREATE TABLE nn_project_user
 (
     project_id BIGINT REFERENCES r_project (id) ON DELETE CASCADE NOT NULL,
@@ -115,15 +119,16 @@ CREATE TABLE nn_project_user
 -- tasks to project
 CREATE TABLE r_task
 (
-    id                   BIGSERIAL PRIMARY KEY,
-    project_id           BIGINT REFERENCES r_project (id) ON DELETE CASCADE NOT NULL,
-    title                VARCHAR(255)                                       NOT NULL DEFAULT '',
-    description          TEXT                                               NOT NULL DEFAULT '',
-    assignee_id          BIGINT REFERENCES r_user (id)                      NOT NULL,
-    importance_status_id INT REFERENCES s_project_importance_status (id)    NOT NULL,
-    progress_status_id   INT REFERENCES s_project_progress_status (id)      NOT NULL,
-    created_at           TIMESTAMPTZ                                        NOT NULL DEFAULT NOW(),
-    updated_at           TIMESTAMPTZ                                        NOT NULL DEFAULT NOW()
+    id                           BIGSERIAL PRIMARY KEY,
+    project_id                   BIGINT REFERENCES r_project (id) ON DELETE CASCADE NOT NULL,
+    title                        VARCHAR(255)                                       NOT NULL DEFAULT '',
+    description                  TEXT                                               NOT NULL DEFAULT '',
+    assignee_id                  BIGINT REFERENCES r_user (id)                      NOT NULL,
+    importance_status_id         INT REFERENCES s_project_importance_status (id)    NOT NULL,
+    progress_status_id           INT REFERENCES s_project_progress_status (id)      NOT NULL,
+    order_num_in_progress_status INT                                                NOT NULL DEFAULT 0,
+    created_at                   TIMESTAMPTZ                                        NOT NULL DEFAULT NOW(),
+    updated_at                   TIMESTAMPTZ                                        NOT NULL DEFAULT NOW()
 );
 CREATE TRIGGER set_timestamp
     BEFORE UPDATE
@@ -131,3 +136,70 @@ CREATE TRIGGER set_timestamp
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 CREATE INDEX idx_r_task_project_id ON r_task (project_id);
+
+CREATE OR REPLACE FUNCTION trigger_set_r_task_order_num_in_progress_status()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    rec RECORD;
+BEGIN
+    FOR rec IN SELECT *
+               FROM r_task
+               WHERE order_num_in_progress_status >= NEW.order_num_in_progress_status
+                 AND progress_status_id = NEW.progress_status_id
+               ORDER BY order_num_in_progress_status
+        LOOP
+            UPDATE r_task
+            SET order_num_in_progress_status = order_num_in_progress_status + 1
+            WHERE id = rec.id;
+        END LOOP;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER set_r_task_order_num_in_progress_status
+    BEFORE INSERT
+    ON r_task
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_r_task_order_num_in_progress_status();
+
+CREATE OR REPLACE FUNCTION get_project_board(_project_id BIGINT)
+    RETURNS JSONB
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    RETURN (SELECT jsonb_agg(
+                           jsonb_build_object(
+                                   'progressStatusId', spps.id,
+                                   'progressStatusName', spps.name,
+                                   'progressStatusOrderNum', spps.order_num,
+                                   'tasks', COALESCE(t.tasks, '[]'::JSONB)
+                               )
+                           ORDER BY (spps.id)
+                       )
+            FROM s_project_progress_status spps
+                     LEFT JOIN LATERAL (
+                SELECT rt.progress_status_id,
+                       jsonb_agg(
+                               jsonb_build_object(
+                                       'taskId', rt.id,
+                                       'taskTitle', rt.title,
+                                       'taskOrderNum', rt.order_num_in_progress_status,
+                                       'assigneeId', rt.assignee_id,
+                                       'assigneeFirstname', ru.firstname,
+                                       'assigneeLastname', ru.lastname,
+                                       'assigneeAvatarURL', ru.avatar_url
+                                   )
+                               ORDER BY (rt.order_num_in_progress_status)
+                           ) tasks
+                FROM r_task rt
+                         INNER JOIN r_user ru ON ru.id = rt.assignee_id
+                GROUP BY rt.progress_status_id
+                ) t ON spps.id = t.progress_status_id
+            WHERE spps.project_id = _project_id);
+END;
+$$;

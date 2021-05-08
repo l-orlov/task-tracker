@@ -97,7 +97,7 @@ UPDATE %s SET name = $1, description = $2 WHERE id = $3`, projectTable)
 
 func (r *ProjectPostgres) GetAllProjects(ctx context.Context) ([]models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, name, description FROM %s`, projectTable)
+SELECT id, name, description FROM %s ORDER BY id ASC`, projectTable)
 	var projects []models.Project
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -110,9 +110,9 @@ SELECT id, name, description FROM %s`, projectTable)
 
 func (r *ProjectPostgres) GetAllProjectsToUser(ctx context.Context, userID uint64) ([]models.Project, error) {
 	query := fmt.Sprintf(`
-SELECT id, name, description
+SELECT p.id, p.name, p.description
 FROM %s AS p INNER JOIN %s AS pu ON p.id = pu.project_id
-WHERE pu.user_id = $1`, projectTable, projectUserTable)
+WHERE pu.user_id = $1 ORDER BY p.id ASC`, projectTable, projectUserTable)
 	var projects []models.Project
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -178,7 +178,7 @@ func (r *ProjectPostgres) GetAllProjectUsers(ctx context.Context, projectID uint
 	query := fmt.Sprintf(`
 SELECT u.id, u.email, u.firstname, u.lastname, pu.is_owner
 FROM %s AS u INNER JOIN %s AS pu ON u.id = pu.user_id
-WHERE pu.project_id = $1`, userTable, projectUserTable)
+WHERE pu.project_id = $1 ORDER BY u.id ASC`, userTable, projectUserTable)
 	var users []models.ProjectUser
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -202,4 +202,32 @@ func (r *ProjectPostgres) DeleteUserFromProject(ctx context.Context, projectID, 
 	}
 
 	return nil
+}
+
+func (r *ProjectPostgres) GetProjectBoard(ctx context.Context, projectID uint64) (jsonData []byte, err error) {
+	query := fmt.Sprintf(`SELECT * FROM %s($1)`, fnGetProjectBoard)
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	err = r.db.QueryRowContext(dbCtx, query, &projectID).Scan(&jsonData)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
+}
+
+func (r *ProjectPostgres) GetProgressStatusTask(ctx context.Context, taskID uint64) (jsonData []byte, err error) {
+	query := fmt.Sprintf(`SELECT * FROM get_progress_status_task($1)`)
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	err = r.db.QueryRowContext(dbCtx, query, &taskID).Scan(&jsonData)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
 }

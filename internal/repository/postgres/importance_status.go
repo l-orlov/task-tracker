@@ -75,7 +75,8 @@ func (r *ImportanceStatusPostgres) Update(ctx context.Context, status models.Imp
 }
 
 func (r *ImportanceStatusPostgres) GetAll(ctx context.Context) ([]models.ImportanceStatus, error) {
-	query := fmt.Sprintf(`SELECT id, project_id, name FROM %s`, importanceStatusTable)
+	query := fmt.Sprintf(`
+SELECT id, project_id, name FROM %s ORDER BY id ASC`, importanceStatusTable)
 	var statuses []models.ImportanceStatus
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -87,7 +88,8 @@ func (r *ImportanceStatusPostgres) GetAll(ctx context.Context) ([]models.Importa
 }
 
 func (r *ImportanceStatusPostgres) GetAllToProject(ctx context.Context, projectID uint64) ([]models.ImportanceStatus, error) {
-	query := fmt.Sprintf(`SELECT id, project_id, name FROM %s WHERE project_id = $1`, importanceStatusTable)
+	query := fmt.Sprintf(`
+SELECT id, project_id, name FROM %s WHERE project_id = $1 ORDER BY id ASC`, importanceStatusTable)
 	var statuses []models.ImportanceStatus
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)

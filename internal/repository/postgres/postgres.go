@@ -16,6 +16,8 @@ const (
 	progressStatusTable   = "s_project_progress_status"
 	projectUserTable      = "nn_project_user"
 	taskTable             = "r_task"
+
+	fnGetProjectBoard = "get_project_board"
 )
 
 func ConnectToDB(cfg config.PostgresDB) (*sqlx.DB, error) {

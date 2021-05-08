@@ -54,3 +54,7 @@ func (s *ProjectService) GetAllProjectUsers(ctx context.Context, projectID uint6
 func (s *ProjectService) DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error {
 	return s.repo.DeleteUserFromProject(ctx, projectID, userID)
 }
+
+func (s *ProjectService) GetProjectBoard(ctx context.Context, projectID uint64) (jsonData []byte, err error) {
+	return s.repo.GetProjectBoard(ctx, projectID)
+}

@@ -24,12 +24,13 @@ func NewProgressStatusPostgres(db *sqlx.DB, dbTimeout time.Duration) *ProgressSt
 }
 
 func (r *ProgressStatusPostgres) Create(ctx context.Context, status models.ProgressStatusToCreate) (int64, error) {
-	query := fmt.Sprintf(`INSERT INTO %s (name) values ($1) RETURNING id`, progressStatusTable)
+	query := fmt.Sprintf(`
+INSERT INTO %s (project_id, name, order_num) values ($1, $2, $3) RETURNING id`, progressStatusTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	row := r.db.QueryRowContext(dbCtx, query, &status.Name)
+	row := r.db.QueryRowContext(dbCtx, query, &status.ProjectID, &status.Name, &status.OrderNum)
 	if err := row.Err(); err != nil {
 		return 0, getDBError(err)
 	}
@@ -43,7 +44,7 @@ func (r *ProgressStatusPostgres) Create(ctx context.Context, status models.Progr
 }
 
 func (r *ProgressStatusPostgres) GetByID(ctx context.Context, id int64) (*models.ProgressStatus, error) {
-	query := fmt.Sprintf(`SELECT id, name FROM %s WHERE id=$1`, progressStatusTable)
+	query := fmt.Sprintf(`SELECT id, project_id, name, order_num FROM %s WHERE id=$1`, progressStatusTable)
 	var status models.ProgressStatus
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -60,13 +61,13 @@ func (r *ProgressStatusPostgres) GetByID(ctx context.Context, id int64) (*models
 	return &status, nil
 }
 
-func (r *ProgressStatusPostgres) Update(ctx context.Context, id int64, status models.ProgressStatusToCreate) error {
-	query := fmt.Sprintf(`UPDATE %s SET name = $1 WHERE id = $2`, progressStatusTable)
+func (r *ProgressStatusPostgres) Update(ctx context.Context, status models.ProgressStatusToUpdate) error {
+	query := fmt.Sprintf(`UPDATE %s SET name = $1, order_num = $2 WHERE id = $3`, progressStatusTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &status.Name, &id)
+	_, err := r.db.ExecContext(dbCtx, query, &status.Name, &status.OrderNum, &status.ID)
 	if err != nil {
 		return err
 	}
@@ -75,13 +76,27 @@ func (r *ProgressStatusPostgres) Update(ctx context.Context, id int64, status mo
 }
 
 func (r *ProgressStatusPostgres) GetAll(ctx context.Context) ([]models.ProgressStatus, error) {
-	query := fmt.Sprintf(`SELECT id, name FROM %s`, progressStatusTable)
+	query := fmt.Sprintf(`
+SELECT id, project_id, name, order_num FROM %s ORDER BY id ASC`, progressStatusTable)
 	var statuses []models.ProgressStatus
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
 	err := r.db.SelectContext(dbCtx, &statuses, query)
+
+	return statuses, err
+}
+
+func (r *ProgressStatusPostgres) GetAllToProject(ctx context.Context, projectID uint64) ([]models.ProgressStatus, error) {
+	query := fmt.Sprintf(`
+SELECT id, project_id, name, order_num FROM %s WHERE project_id = $1 ORDER BY id ASC`, progressStatusTable)
+	var statuses []models.ProgressStatus
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	err := r.db.SelectContext(dbCtx, &statuses, query, &projectID)
 
 	return statuses, err
 }

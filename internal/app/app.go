@@ -55,6 +55,9 @@ func Run(configPath string) {
 		log.Fatalf("failed to create repository: %v", err)
 	}
 
+	// fmt.Println(repo.Project.GetProgressStatusTask(context.Background(), 2))
+	// return
+
 	mailerLogEntry := logrus.NewEntry(lg).WithFields(logrus.Fields{"source": "mailerService"})
 	mailer := service.NewMailerService(cfg.Mailer, mailerLogEntry)
 	defer mailer.Close()

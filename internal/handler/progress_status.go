@@ -48,19 +48,13 @@ func (h *Handler) GetProgressStatusByID(c *gin.Context) {
 }
 
 func (h *Handler) UpdateProgressStatus(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
-		return
-	}
-
-	var status models.ProgressStatusToCreate
+	var status models.ProgressStatusToUpdate
 	if err := c.BindJSON(&status); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	if err := h.svc.ProgressStatus.Update(c, id, status); err != nil {
+	if err := h.svc.ProgressStatus.Update(c, status); err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -70,6 +64,27 @@ func (h *Handler) UpdateProgressStatus(c *gin.Context) {
 
 func (h *Handler) GetAllProgressStatuses(c *gin.Context) {
 	statuses, err := h.svc.ProgressStatus.GetAll(c)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	if statuses == nil {
+		c.JSON(http.StatusOK, []struct{}{})
+		return
+	}
+
+	c.JSON(http.StatusOK, statuses)
+}
+
+func (h *Handler) GetAllProgressStatusesToProject(c *gin.Context) {
+	projectID, err := strconv.ParseUint(c.Query("projectId"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidProjectIDQueryParam)
+		return
+	}
+
+	statuses, err := h.svc.ProgressStatus.GetAllToProject(c, projectID)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusInternalServerError, err)
 		return

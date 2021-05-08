@@ -34,6 +34,8 @@ type (
 		AddUserToProject(ctx context.Context, projectID, userID uint64) error
 		GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.ProjectUser, error)
 		DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error
+		GetProjectBoard(ctx context.Context, projectID uint64) (jsonData []byte, err error)
+		GetProgressStatusTask(ctx context.Context, taskID uint64) (jsonData []byte, err error)
 	}
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.ImportanceStatusToCreate) (int64, error)
@@ -46,8 +48,9 @@ type (
 	ProgressStatus interface {
 		Create(ctx context.Context, status models.ProgressStatusToCreate) (int64, error)
 		GetByID(ctx context.Context, id int64) (*models.ProgressStatus, error)
-		Update(ctx context.Context, id int64, status models.ProgressStatusToCreate) error
+		Update(ctx context.Context, status models.ProgressStatusToUpdate) error
 		GetAll(ctx context.Context) ([]models.ProgressStatus, error)
+		GetAllToProject(ctx context.Context, projectID uint64) ([]models.ProgressStatus, error)
 		Delete(ctx context.Context, id int64) error
 	}
 	Task interface {
