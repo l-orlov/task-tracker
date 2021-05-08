@@ -45,7 +45,11 @@ type (
 		AddUserToProject(ctx context.Context, projectID, userID uint64) error
 		GetAllProjectUsers(ctx context.Context, projectID uint64) ([]models.ProjectUser, error)
 		DeleteUserFromProject(ctx context.Context, projectID, userID uint64) error
-		GetProjectBoard(ctx context.Context, projectID uint64) (jsonData []byte, err error)
+	}
+	ProjectBoard interface {
+		GetProjectBoardBytes(ctx context.Context, projectID uint64) (jsonData []byte, err error)
+		GetProjectBoard(ctx context.Context, projectID uint64) (*models.ProjectBoard, error)
+		UpdateProjectBoardParts(ctx context.Context, board models.ProjectBoard) error
 	}
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.ImportanceStatusToCreate) (int64, error)
@@ -95,6 +99,7 @@ type (
 	Service struct {
 		User
 		Project
+		ProjectBoard
 		ImportanceStatus
 		ProgressStatus
 		Task
@@ -126,6 +131,7 @@ func NewService(
 	return &Service{
 		User:               NewUserService(repo.User, cfg.JWT.AccessTokenLifetime.Duration()),
 		Project:            NewProjectService(repo.Project),
+		ProjectBoard:       NewProjectBoardService(repo.ProjectBoard),
 		ImportanceStatus:   NewImportanceStatusService(repo.ImportanceStatus),
 		ProgressStatus:     NewProgressStatusService(repo.ProgressStatus),
 		Task:               NewTaskService(repo.Task),

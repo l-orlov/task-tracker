@@ -93,7 +93,12 @@ func (h *Handler) InitRoutes() http.Handler {
 			projects.POST("/:id/users", h.AddUserToProject)
 			projects.GET("/:id/users", h.GetAllProjectUsers)
 			projects.DELETE("/:id/users", h.DeleteUserFromProject)
-			projects.GET("/:id/board", h.GetProjectBoard)
+		}
+
+		projectBoard := api.Group("/project-board")
+		{
+			projectBoard.GET("/", h.GetProjectBoard)
+			projectBoard.PUT("/parts", h.UpdateProjectBoardParts)
 		}
 
 		importanceStatuses := api.Group("/project-importance")

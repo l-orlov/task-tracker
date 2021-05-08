@@ -172,15 +172,15 @@ CREATE OR REPLACE FUNCTION get_project_board(_project_id BIGINT)
 AS
 $$
 BEGIN
-    RETURN (SELECT jsonb_agg(
-                           jsonb_build_object(
-                                   'progressStatusId', spps.id,
-                                   'progressStatusName', spps.name,
-                                   'progressStatusOrderNum', spps.order_num,
-                                   'tasks', COALESCE(t.tasks, '[]'::JSONB)
-                               )
-                           ORDER BY (spps.id)
-                       )
+    RETURN (SELECT COALESCE(jsonb_agg(
+                                    jsonb_build_object(
+                                            'progressStatusId', spps.id,
+                                            'progressStatusName', spps.name,
+                                            'progressStatusOrderNum', spps.order_num,
+                                            'tasks', COALESCE(t.tasks, '[]'::JSONB)
+                                        )
+                                    ORDER BY (spps.id)
+                                ), '[]'::JSONB) board
             FROM s_project_progress_status spps
                      LEFT JOIN LATERAL (
                 SELECT rt.progress_status_id,
@@ -201,5 +201,26 @@ BEGIN
                 GROUP BY rt.progress_status_id
                 ) t ON spps.id = t.progress_status_id
             WHERE spps.project_id = _project_id);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION update_project_board_parts(_board jsonb)
+    RETURNS VOID
+    LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    rec RECORD;
+BEGIN
+    FOR rec IN select board."progressStatusId", tasks."taskId", tasks."taskOrderNum"
+               from jsonb_to_recordset(_board) as board("progressStatusId" int, "tasks" jsonb)
+                        left join jsonb_to_recordset(board."tasks") as tasks("taskId" bigint, "taskOrderNum" int)
+                                  ON TRUE
+        LOOP
+            UPDATE r_task
+            SET progress_status_id           = rec."progressStatusId",
+                order_num_in_progress_status = rec."taskOrderNum"
+            WHERE id = rec."taskId";
+        END LOOP;
 END;
 $$;

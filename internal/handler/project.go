@@ -223,24 +223,3 @@ func (h *Handler) DeleteUserFromProject(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
-
-func (h *Handler) GetProjectBoard(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
-		return
-	}
-
-	jsonData, err := h.svc.Project.GetProjectBoard(c, id)
-	if err != nil {
-		h.newErrorResponse(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	if jsonData == nil {
-		c.JSON(http.StatusOK, []struct{}{})
-		return
-	}
-
-	c.Data(200, "application/json", jsonData)
-}
