@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/l-orlov/task-tracker/internal/models"
-	"golang.org/x/sync/errgroup"
 )
 
 func (h *Handler) CreateProject(c *gin.Context) {
@@ -34,6 +33,27 @@ func (h *Handler) CreateProject(c *gin.Context) {
 }
 
 func (h *Handler) GetProjectByID(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
+		return
+	}
+
+	project, err := h.svc.Project.GetProjectByID(c, id)
+	if err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	if project == nil {
+		c.Status(http.StatusNoContent)
+		return
+	}
+
+	c.JSON(http.StatusOK, project)
+}
+
+func (h *Handler) GetProjectByIDToUser(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, ErrNotValidIDParameter)
@@ -124,52 +144,6 @@ func (h *Handler) GetAllProjectsWithParameters(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, projects)
-}
-
-func (h *Handler) GetAllProjectsWithTasks(c *gin.Context) {
-	var (
-		projects []models.Project
-		tasks    []models.Task
-	)
-
-	g, gCtx := errgroup.WithContext(c)
-
-	g.Go(func() error {
-		var err error
-		projects, err = h.svc.Project.GetAllProjects(gCtx)
-		return err
-	})
-
-	g.Go(func() error {
-		var err error
-		tasks, err = h.svc.Task.GetAllTasks(gCtx)
-		return err
-	})
-
-	if err := g.Wait(); err != nil {
-		h.newErrorResponse(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	tasksToProject := make(map[uint64][]models.Task)
-	for _, task := range tasks {
-		tasksToProject[task.ProjectID] = append(tasksToProject[task.ProjectID], task)
-	}
-
-	projectsWithTasks := make([]models.ProjectWithTasks, len(projects))
-	for i := range projects {
-		projectsWithTasks[i] = projects[i].ToProjectWithTasks()
-
-		var tasks []models.Task
-		var ok bool
-		if tasks, ok = tasksToProject[projectsWithTasks[i].ID]; !ok {
-			tasks = []models.Task{}
-		}
-
-		projectsWithTasks[i].Tasks = tasks
-	}
-
-	c.JSON(http.StatusOK, projectsWithTasks)
 }
 
 func (h *Handler) DeleteProject(c *gin.Context) {

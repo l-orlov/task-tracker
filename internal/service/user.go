@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	ErrUserNotFound  = errors.New("user not found")
-	ErrEmailIsTaken  = errors.New("user with this email already exists")
-	ErrWrongPassword = errors.New("wrong password")
+	ErrUserNotFound              = errors.New("user not found")
+	ErrEmailIsTaken              = errors.New("user with this email already exists")
+	ErrWrongPassword             = errors.New("wrong password")
+	ErrWrongProjectBoardPartsNum = errors.New("wrong number of project board parts. should be 2")
 )
 
 type (

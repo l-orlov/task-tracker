@@ -6,19 +6,19 @@ import (
 
 type (
 	UserToCreate struct {
-		Email     string `json:"email" binding:"required"`
+		Email     string `json:"email" binding:"required,email"`
 		FirstName string `json:"firstName" binding:"required"`
 		LastName  string `json:"lastName" binding:"required"`
 		Password  string `json:"password" binding:"required"`
 	}
 	UserToSignIn struct {
-		Email       string `json:"email" binding:"required"`
+		Email       string `json:"email" binding:"required,email"`
 		Password    string `json:"password" binding:"required"`
 		Fingerprint string `json:"fingerprint" binding:"required"`
 	}
 	User struct {
 		ID               uint64 `json:"id" binding:"required" db:"id"`
-		Email            string `json:"email" binding:"required" db:"email"`
+		Email            string `json:"email" binding:"required,email" db:"email"`
 		FirstName        string `json:"firstName" binding:"required" db:"firstname"`
 		LastName         string `json:"lastName" binding:"required" db:"lastname"`
 		Password         string `json:"-" db:"password"`

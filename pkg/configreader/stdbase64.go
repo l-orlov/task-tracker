@@ -1,4 +1,4 @@
-package config
+package configreader
 
 import (
 	b64 "encoding/base64"
@@ -15,7 +15,9 @@ func (b *StdBase64) String() string {
 func (b *StdBase64) Decode(value string) error {
 	sDec, err := b64.StdEncoding.DecodeString(value)
 	if err != nil {
-		return errors.Errorf("failed to decode %s from base64 into value of type StdBase64", value)
+		return errors.Errorf(
+			"failed to decode %s from base64 into value of type StdBase64", value,
+		)
 	}
 
 	*b = sDec
@@ -23,9 +25,9 @@ func (b *StdBase64) Decode(value string) error {
 	return nil
 }
 
-func (b *StdBase64) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+func (b *StdBase64) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var input string
-	if err = unmarshal(&input); err != nil {
+	if err := unmarshal(&input); err != nil {
 		return err
 	}
 

@@ -85,7 +85,7 @@ importance_status_id = $4, progress_status_id = $5 WHERE id = $6`, taskTable)
 func (r *TaskPostgres) GetAllTasksToProject(ctx context.Context, projectID uint64) ([]models.Task, error) {
 	query := fmt.Sprintf(`
 SELECT id, project_id, title, description, assignee_id, importance_status_id, progress_status_id
-FROM %s WHERE project_id=$1`, taskTable)
+FROM %s WHERE project_id=$1 ORDER BY id ASC`, taskTable)
 	var tasks []models.Task
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
@@ -127,7 +127,7 @@ ORDER BY id ASC`, taskTable)
 func (r *TaskPostgres) GetAllTasks(ctx context.Context) ([]models.Task, error) {
 	query := fmt.Sprintf(`
 SELECT id, project_id, title, description, assignee_id, importance_status_id, progress_status_id
-FROM %s`, taskTable)
+FROM %s ORDER BY id ASC`, taskTable)
 	var tasks []models.Task
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)

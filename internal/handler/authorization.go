@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	accessTokenCookieName  = "access_token"
-	refreshTokenCookieName = "refresh_token"
+	accessTokenCookieName  = "_tt_access"  // task tracker access token
+	refreshTokenCookieName = "_tt_refresh" // task tracker refresh token
 )
 
 func (h *Handler) SignIn(c *gin.Context) {

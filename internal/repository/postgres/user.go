@@ -119,7 +119,7 @@ func (r *UserPostgres) UpdateUserPassword(ctx context.Context, userID uint64, pa
 
 func (r *UserPostgres) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	query := fmt.Sprintf(`
-SELECT id, email, firstname, lastname, is_email_confirmed, avatar_url FROM %s`, userTable)
+SELECT id, email, firstname, lastname, is_email_confirmed, avatar_url FROM %s ORDER BY id ASC`, userTable)
 	var users []models.User
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
