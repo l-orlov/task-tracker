@@ -12,5 +12,7 @@ DROP FUNCTION IF EXISTS
     trigger_set_r_task_order_num_in_progress_status(),
     get_project_board(BIGINT),
     update_project_board_parts(JSONB),
+    update_project_board_progress_statuses(JSONB),
+    update_project_board_progress_status_tasks(JSONB),
     trigger_set_timestamp(),
     CASCADE;

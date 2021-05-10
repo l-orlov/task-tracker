@@ -179,7 +179,7 @@ BEGIN
                                             'progressStatusOrderNum', spps.order_num,
                                             'tasks', COALESCE(t.tasks, '[]'::JSONB)
                                         )
-                                    ORDER BY (spps.id)
+                                    ORDER BY (spps.order_num)
                                 ), '[]'::JSONB) board
             FROM s_project_progress_status spps
                      LEFT JOIN LATERAL (
@@ -204,7 +204,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION update_project_board_parts(_board jsonb)
+CREATE OR REPLACE FUNCTION update_project_board_parts(_board JSONB)
     RETURNS VOID
     LANGUAGE plpgsql
 AS
@@ -212,15 +212,58 @@ $$
 DECLARE
     rec RECORD;
 BEGIN
-    FOR rec IN select board."progressStatusId", tasks."taskId", tasks."taskOrderNum"
-               from jsonb_to_recordset(_board) as board("progressStatusId" int, "tasks" jsonb)
-                        left join jsonb_to_recordset(board."tasks") as tasks("taskId" bigint, "taskOrderNum" int)
+    FOR rec IN SELECT board."progressStatusId", tasks."taskId", tasks."taskOrderNum"
+               FROM jsonb_to_recordset(_board) AS board("progressStatusId" INT, "tasks" JSONB)
+                        LEFT JOIN jsonb_to_recordset(board."tasks") AS tasks("taskId" BIGINT, "taskOrderNum" INT)
                                   ON TRUE
         LOOP
-            UPDATE r_task
-            SET progress_status_id           = rec."progressStatusId",
-                order_num_in_progress_status = rec."taskOrderNum"
-            WHERE id = rec."taskId";
+            IF rec."progressStatusId" IS NOT NULL AND
+               rec."taskId" IS NOT NULL AND rec."taskOrderNum" IS NOT NULL THEN
+                UPDATE r_task
+                SET progress_status_id           = rec."progressStatusId",
+                    order_num_in_progress_status = rec."taskOrderNum"
+                WHERE id = rec."taskId";
+            END IF;
+        END LOOP;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION update_project_board_progress_statuses(_progress_statuses JSONB)
+    RETURNS VOID
+    LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    rec RECORD;
+BEGIN
+    FOR rec IN SELECT board."progressStatusId", board."progressStatusOrderNum"
+               FROM jsonb_to_recordset(_progress_statuses) AS board("progressStatusId" INT, "progressStatusOrderNum" INT)
+        LOOP
+            IF rec."progressStatusId" IS NOT NULL AND rec."progressStatusOrderNum" IS NOT NULL THEN
+                UPDATE s_project_progress_status
+                SET order_num = rec."progressStatusOrderNum"
+                WHERE id = rec."progressStatusId";
+            END IF;
+        END LOOP;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION update_project_board_progress_status_tasks(_tasks JSONB)
+    RETURNS VOID
+    LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    rec RECORD;
+BEGIN
+    FOR rec IN SELECT tasks."taskId", tasks."taskOrderNum"
+               FROM jsonb_to_recordset(_tasks) AS tasks("taskId" BIGINT, "taskOrderNum" INT)
+        LOOP
+            IF rec."taskId" IS NOT NULL AND rec."taskOrderNum" IS NOT NULL THEN
+                UPDATE r_task
+                SET order_num_in_progress_status = rec."taskOrderNum"
+                WHERE id = rec."taskId";
+            END IF;
         END LOOP;
 END;
 $$;

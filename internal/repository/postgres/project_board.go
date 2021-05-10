@@ -65,3 +65,31 @@ func (r *ProjectBoardPostgres) UpdateProjectBoardParts(ctx context.Context, boar
 
 	return nil
 }
+
+func (r *ProjectBoardPostgres) UpdateProjectBoardProgressStatuses(ctx context.Context, statuses models.ProjectBoardProgressStatuses) error {
+	query := fmt.Sprintf(`SELECT * FROM %s($1)`, fnUpdateProjectBoardProgressStatuses)
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	_, err := r.db.ExecContext(dbCtx, query, &statuses)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *ProjectBoardPostgres) UpdateProjectBoardProgressStatusTasks(ctx context.Context, tasks models.ProjectBoardProgressStatusTasks) error {
+	query := fmt.Sprintf(`SELECT * FROM %s($1)`, fnUpdateProjectBoardProgressStatusTasks)
+
+	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	_, err := r.db.ExecContext(dbCtx, query, &tasks)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -32,3 +32,11 @@ func (s *ProjectBoardService) UpdateProjectBoardParts(ctx context.Context, board
 
 	return s.repo.UpdateProjectBoardParts(ctx, board)
 }
+
+func (s *ProjectBoardService) UpdateProjectBoardProgressStatuses(ctx context.Context, statuses models.ProjectBoardProgressStatuses) error {
+	return s.repo.UpdateProjectBoardProgressStatuses(ctx, statuses)
+}
+
+func (s *ProjectBoardService) UpdateProjectBoardProgressStatusTasks(ctx context.Context, tasks models.ProjectBoardProgressStatusTasks) error {
+	return s.repo.UpdateProjectBoardProgressStatusTasks(ctx, tasks)
+}

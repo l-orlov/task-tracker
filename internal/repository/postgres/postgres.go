@@ -17,8 +17,10 @@ const (
 	projectUserTable      = "nn_project_user"
 	taskTable             = "r_task"
 
-	fnGetProjectBoard         = "get_project_board"
-	fnUpdateProjectBoardParts = "update_project_board_parts"
+	fnGetProjectBoard                       = "get_project_board"
+	fnUpdateProjectBoardParts               = "update_project_board_parts"
+	fnUpdateProjectBoardProgressStatuses    = "update_project_board_progress_statuses"
+	fnUpdateProjectBoardProgressStatusTasks = "update_project_board_progress_status_tasks"
 )
 
 func ConnectToDB(cfg config.PostgresDB) (*sqlx.DB, error) {

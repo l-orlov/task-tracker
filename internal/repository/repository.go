@@ -39,6 +39,8 @@ type (
 		GetProjectBoardBytes(ctx context.Context, projectID uint64) (jsonData []byte, err error)
 		GetProjectBoard(ctx context.Context, projectID uint64) (*models.ProjectBoard, error)
 		UpdateProjectBoardParts(ctx context.Context, board models.ProjectBoard) error
+		UpdateProjectBoardProgressStatuses(ctx context.Context, statuses models.ProjectBoardProgressStatuses) error
+		UpdateProjectBoardProgressStatusTasks(ctx context.Context, tasks models.ProjectBoardProgressStatusTasks) error
 	}
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.ImportanceStatusToCreate) (int64, error)

@@ -43,3 +43,33 @@ func (h *Handler) UpdateProjectBoardParts(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
+
+func (h *Handler) UpdateProjectBoardProgressStatuses(c *gin.Context) {
+	var statuses models.ProjectBoardProgressStatuses
+	if err := c.BindJSON(&statuses); err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	if err := h.svc.ProjectBoard.UpdateProjectBoardProgressStatuses(c, statuses); err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *Handler) UpdateProjectBoardProgressStatusTasks(c *gin.Context) {
+	var tasks models.ProjectBoardProgressStatusTasks
+	if err := c.BindJSON(&tasks); err != nil {
+		h.newErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	if err := h.svc.ProjectBoard.UpdateProjectBoardProgressStatusTasks(c, tasks); err != nil {
+		h.newErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}

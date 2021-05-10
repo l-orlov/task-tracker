@@ -99,6 +99,8 @@ func (h *Handler) InitRoutes() http.Handler {
 		{
 			projectBoard.GET("/", h.GetProjectBoard)
 			projectBoard.PUT("/parts", h.UpdateProjectBoardParts)
+			projectBoard.PUT("/statuses", h.UpdateProjectBoardProgressStatuses)
+			projectBoard.PUT("/status-tasks", h.UpdateProjectBoardProgressStatusTasks)
 		}
 
 		importanceStatuses := api.Group("/project-importance")
