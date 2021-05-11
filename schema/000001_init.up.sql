@@ -30,7 +30,7 @@ CREATE TRIGGER set_timestamp
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
--- projects to work ON
+-- projects to work on
 CREATE TABLE r_project
 (
     id          BIGSERIAL PRIMARY KEY,
@@ -106,7 +106,7 @@ CREATE TRIGGER insert_default_project_statuses
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_insert_default_project_statuses();
 
--- users working ON projects
+-- users working on projects
 CREATE TABLE nn_project_user
 (
     project_id BIGINT REFERENCES r_project (id) ON DELETE CASCADE NOT NULL,
@@ -165,6 +165,7 @@ CREATE TRIGGER set_r_task_order_num_in_progress_status
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_r_task_order_num_in_progress_status();
 
+-- methods for processing project board json below
 CREATE OR REPLACE FUNCTION get_project_board(_project_id BIGINT)
     RETURNS JSONB
     LANGUAGE plpgsql
