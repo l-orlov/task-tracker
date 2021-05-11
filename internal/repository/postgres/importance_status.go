@@ -60,13 +60,13 @@ func (r *ImportanceStatusPostgres) GetByID(ctx context.Context, id int64) (*mode
 	return &status, nil
 }
 
-func (r *ImportanceStatusPostgres) Update(ctx context.Context, status models.ImportanceStatusToUpdate) error {
-	query := fmt.Sprintf(`UPDATE %s SET name = $1 WHERE id = $2`, importanceStatusTable)
+func (r *ImportanceStatusPostgres) Update(ctx context.Context, status models.ImportanceStatus) error {
+	query := fmt.Sprintf(`UPDATE %s SET name = :name WHERE id = :id`, importanceStatusTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &status.Name, &status.ID)
+	_, err := r.db.NamedExecContext(dbCtx, query, &status)
 	if err != nil {
 		return err
 	}

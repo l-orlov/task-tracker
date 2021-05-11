@@ -23,7 +23,7 @@ func (s *ImportanceStatusService) GetByID(ctx context.Context, id int64) (*model
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *ImportanceStatusService) Update(ctx context.Context, status models.ImportanceStatusToUpdate) error {
+func (s *ImportanceStatusService) Update(ctx context.Context, status models.ImportanceStatus) error {
 	return s.repo.Update(ctx, status)
 }
 

@@ -9,18 +9,14 @@ type (
 		ImportanceStatusID int64  `json:"importanceStatusId" binding:"required"`
 		ProgressStatusID   int64  `json:"progressStatusId" binding:"required"`
 	}
-	TaskToUpdate struct {
-		ID uint64 `json:"id" binding:"required"`
-		TaskToCreate
-	}
 	Task struct {
-		ID                 uint64 `json:"id" db:"id"`
-		ProjectID          uint64 `json:"projectId" db:"project_id"`
-		Title              string `json:"title" db:"title"`
+		ID                 uint64 `json:"id" binding:"required" db:"id"`
+		ProjectID          uint64 `json:"projectId" binding:"required" db:"project_id"`
+		Title              string `json:"title" binding:"required" db:"title"`
 		Description        string `json:"description" db:"description"`
-		AssigneeID         uint64 `json:"assigneeId" db:"assignee_id"`
-		ImportanceStatusID int64  `json:"importanceStatusId" db:"importance_status_id"`
-		ProgressStatusID   int64  `json:"progressStatusId" db:"progress_status_id"`
+		AssigneeID         uint64 `json:"assigneeId" binding:"required" db:"assignee_id"`
+		ImportanceStatusID int64  `json:"importanceStatusId" binding:"required" db:"importance_status_id"`
+		ProgressStatusID   int64  `json:"progressStatusId" binding:"required" db:"progress_status_id"`
 	}
 	TaskParams struct {
 		ID                 *uint64 `json:"id"`

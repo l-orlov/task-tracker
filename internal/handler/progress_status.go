@@ -48,7 +48,7 @@ func (h *Handler) GetProgressStatusByID(c *gin.Context) {
 }
 
 func (h *Handler) UpdateProgressStatus(c *gin.Context) {
-	var status models.ProgressStatusToUpdate
+	var status models.ProgressStatus
 	if err := c.BindJSON(&status); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return

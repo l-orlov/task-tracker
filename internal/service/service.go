@@ -37,7 +37,7 @@ type (
 	Project interface {
 		CreateProject(ctx context.Context, project models.ProjectToCreate, owner uint64) (uint64, error)
 		GetProjectByID(ctx context.Context, id uint64) (*models.Project, error)
-		UpdateProject(ctx context.Context, project models.ProjectToUpdate) error
+		UpdateProject(ctx context.Context, project models.Project) error
 		GetAllProjects(ctx context.Context) ([]models.Project, error)
 		GetAllProjectsToUser(ctx context.Context, userID uint64) ([]models.Project, error)
 		GetAllProjectsWithParameters(ctx context.Context, params models.ProjectParams) ([]models.Project, error)
@@ -56,7 +56,7 @@ type (
 	ImportanceStatus interface {
 		Create(ctx context.Context, status models.ImportanceStatusToCreate) (int64, error)
 		GetByID(ctx context.Context, id int64) (*models.ImportanceStatus, error)
-		Update(ctx context.Context, status models.ImportanceStatusToUpdate) error
+		Update(ctx context.Context, status models.ImportanceStatus) error
 		GetAll(ctx context.Context) ([]models.ImportanceStatus, error)
 		GetAllToProject(ctx context.Context, projectID uint64) ([]models.ImportanceStatus, error)
 		Delete(ctx context.Context, id int64) error
@@ -64,7 +64,7 @@ type (
 	ProgressStatus interface {
 		Create(ctx context.Context, status models.ProgressStatusToCreate) (int64, error)
 		GetByID(ctx context.Context, id int64) (*models.ProgressStatus, error)
-		Update(ctx context.Context, status models.ProgressStatusToUpdate) error
+		Update(ctx context.Context, status models.ProgressStatus) error
 		GetAll(ctx context.Context) ([]models.ProgressStatus, error)
 		GetAllToProject(ctx context.Context, projectID uint64) ([]models.ProgressStatus, error)
 		Delete(ctx context.Context, id int64) error
@@ -72,7 +72,7 @@ type (
 	Task interface {
 		CreateTaskToProject(ctx context.Context, task models.TaskToCreate) (uint64, error)
 		GetTaskByID(ctx context.Context, id uint64) (*models.Task, error)
-		UpdateTask(ctx context.Context, task models.TaskToUpdate) error
+		UpdateTask(ctx context.Context, task models.Task) error
 		GetAllTasksToProject(ctx context.Context, id uint64) ([]models.Task, error)
 		GetAllTasksWithParameters(ctx context.Context, params models.TaskParams) ([]models.Task, error)
 		GetAllTasks(ctx context.Context) ([]models.Task, error)

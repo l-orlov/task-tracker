@@ -5,13 +5,9 @@ type (
 		Name        string `json:"name" binding:"required"`
 		Description string `json:"description"`
 	}
-	ProjectToUpdate struct {
-		ID uint64 `json:"id" binding:"required"`
-		ProjectToCreate
-	}
 	Project struct {
-		ID          uint64 `json:"id" db:"id"`
-		Name        string `json:"name" db:"name"`
+		ID          uint64 `json:"id" binding:"required" db:"id"`
+		Name        string `json:"name" binding:"required" db:"name"`
 		Description string `json:"description" db:"description"`
 	}
 	ProjectParams struct {

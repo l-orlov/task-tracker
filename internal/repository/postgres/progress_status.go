@@ -61,13 +61,14 @@ func (r *ProgressStatusPostgres) GetByID(ctx context.Context, id int64) (*models
 	return &status, nil
 }
 
-func (r *ProgressStatusPostgres) Update(ctx context.Context, status models.ProgressStatusToUpdate) error {
-	query := fmt.Sprintf(`UPDATE %s SET name = $1, order_num = $2 WHERE id = $3`, progressStatusTable)
+func (r *ProgressStatusPostgres) Update(ctx context.Context, status models.ProgressStatus) error {
+	query := fmt.Sprintf(`
+UPDATE %s SET name = :name, order_num = :order_num WHERE id = :id`, progressStatusTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &status.Name, &status.OrderNum, &status.ID)
+	_, err := r.db.NamedExecContext(dbCtx, query, &status)
 	if err != nil {
 		return err
 	}

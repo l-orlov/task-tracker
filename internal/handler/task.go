@@ -48,7 +48,7 @@ func (h *Handler) GetTaskByID(c *gin.Context) {
 }
 
 func (h *Handler) UpdateTask(c *gin.Context) {
-	var task models.TaskToUpdate
+	var task models.Task
 	if err := c.BindJSON(&task); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return

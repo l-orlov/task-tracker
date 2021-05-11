@@ -75,7 +75,7 @@ func (h *Handler) GetProjectByIDToUser(c *gin.Context) {
 }
 
 func (h *Handler) UpdateProject(c *gin.Context) {
-	var project models.ProjectToUpdate
+	var project models.Project
 	if err := c.BindJSON(&project); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return

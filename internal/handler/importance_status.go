@@ -48,7 +48,7 @@ func (h *Handler) GetImportanceStatusByID(c *gin.Context) {
 }
 
 func (h *Handler) UpdateImportanceStatus(c *gin.Context) {
-	var status models.ImportanceStatusToUpdate
+	var status models.ImportanceStatus
 	if err := c.BindJSON(&status); err != nil {
 		h.newErrorResponse(c, http.StatusBadRequest, err)
 		return

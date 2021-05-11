@@ -23,7 +23,7 @@ func (s *ProgressStatusService) GetByID(ctx context.Context, id int64) (*models.
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *ProgressStatusService) Update(ctx context.Context, status models.ProgressStatusToUpdate) error {
+func (s *ProgressStatusService) Update(ctx context.Context, status models.ProgressStatus) error {
 	return s.repo.Update(ctx, status)
 }
 

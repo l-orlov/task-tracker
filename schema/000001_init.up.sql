@@ -67,9 +67,8 @@ CREATE TABLE s_project_progress_status
 (
     id            SERIAL PRIMARY KEY,
     project_id    BIGINT REFERENCES r_project (id) ON DELETE CASCADE,
-    name          VARCHAR(255) NOT NULL DEFAULT '' UNIQUE,
+    name          VARCHAR(255) NOT NULL DEFAULT '',
     order_num     INT          NOT NULL DEFAULT 0,
-    ordered_tasks JSONB        NOT NULL DEFAULT '[]'::JSONB,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     UNIQUE (project_id, name)

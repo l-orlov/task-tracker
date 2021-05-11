@@ -80,14 +80,14 @@ SELECT id, name, description FROM %s WHERE id = $1`, projectTable)
 	return &project, nil
 }
 
-func (r *ProjectPostgres) UpdateProject(ctx context.Context, project models.ProjectToUpdate) error {
+func (r *ProjectPostgres) UpdateProject(ctx context.Context, project models.Project) error {
 	query := fmt.Sprintf(`
-UPDATE %s SET name = $1, description = $2 WHERE id = $3`, projectTable)
+UPDATE %s SET name = :name, description = :description WHERE id = :id`, projectTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &project.Name, &project.Description, &project.ID)
+	_, err := r.db.NamedExecContext(dbCtx, query, &project)
 	if err != nil {
 		return err
 	}

@@ -90,13 +90,13 @@ FROM %s WHERE id=$1`, userTable)
 
 func (r *UserPostgres) UpdateUser(ctx context.Context, user models.User) error {
 	query := fmt.Sprintf(`
-UPDATE %s SET firstname = $1, lastname = $2, avatar_url = $3 WHERE id = $4`, userTable)
+UPDATE %s SET firstname = :firstname, lastname = :lastname, avatar_url = :avatar_url
+WHERE id = :id`, userTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &user.FirstName, &user.LastName,
-		&user.AvatarURL, &user.ID)
+	_, err := r.db.NamedExecContext(dbCtx, query, &user)
 	if err != nil {
 		return getDBError(err)
 	}

@@ -23,7 +23,7 @@ func (s *TaskService) GetTaskByID(ctx context.Context, id uint64) (*models.Task,
 	return s.repo.GetTaskByID(ctx, id)
 }
 
-func (s *TaskService) UpdateTask(ctx context.Context, task models.TaskToUpdate) error {
+func (s *TaskService) UpdateTask(ctx context.Context, task models.Task) error {
 	return s.repo.UpdateTask(ctx, task)
 }
 

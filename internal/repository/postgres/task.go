@@ -65,16 +65,15 @@ FROM %s WHERE id = $1`, taskTable)
 	return &task, nil
 }
 
-func (r *TaskPostgres) UpdateTask(ctx context.Context, task models.TaskToUpdate) error {
+func (r *TaskPostgres) UpdateTask(ctx context.Context, task models.Task) error {
 	query := fmt.Sprintf(`
-UPDATE %s SET title = $1, description = $2, assignee_id = $3,
-importance_status_id = $4, progress_status_id = $5 WHERE id = $6`, taskTable)
+UPDATE %s SET title = :title, description = :description, assignee_id = :assignee_id,
+importance_status_id = :importance_status_id, progress_status_id = :progress_status_id WHERE id = :id`, taskTable)
 
 	dbCtx, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(dbCtx, query, &task.Title, &task.Description, &task.AssigneeID,
-		&task.ImportanceStatusID, &task.ProgressStatusID, &task.ID)
+	_, err := r.db.NamedExecContext(dbCtx, query, &task)
 	if err != nil {
 		return err
 	}

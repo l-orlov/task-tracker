@@ -23,7 +23,7 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, id uint64) (*models
 	return s.repo.GetProjectByID(ctx, id)
 }
 
-func (s *ProjectService) UpdateProject(ctx context.Context, project models.ProjectToUpdate) error {
+func (s *ProjectService) UpdateProject(ctx context.Context, project models.Project) error {
 	return s.repo.UpdateProject(ctx, project)
 }
 
