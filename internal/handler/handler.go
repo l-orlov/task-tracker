@@ -18,11 +18,10 @@ type (
 		SecureCookie             *securecookie.SecureCookie
 	}
 	Handler struct {
-		cfg        *config.Config
-		log        *logrus.Logger
-		options    Options
-		svc        *service.Service
-		httpServer *http.Server
+		cfg     *config.Config
+		log     *logrus.Logger
+		options Options
+		svc     *service.Service
 	}
 )
 
