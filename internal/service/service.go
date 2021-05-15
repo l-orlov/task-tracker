@@ -7,6 +7,7 @@ import (
 	"github.com/l-orlov/task-tracker/internal/config"
 	"github.com/l-orlov/task-tracker/internal/models"
 	"github.com/l-orlov/task-tracker/internal/repository"
+	"github.com/l-orlov/task-tracker/pkg/mailer"
 	"github.com/pkg/errors"
 	"github.com/sethvargo/go-password/password"
 	"github.com/sirupsen/logrus"
@@ -114,7 +115,7 @@ type (
 
 func NewService(
 	cfg *config.Config, log *logrus.Logger,
-	repo *repository.Repository, mailer Mailer,
+	repo *repository.Repository, mailer mailer.Mailer,
 ) (*Service, error) {
 	var generator RandomTokenGenerator
 	var err error
@@ -130,6 +131,11 @@ func NewService(
 	authenticationLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "authentication-svc"})
 	verificationLogEntry := logrus.NewEntry(log).WithFields(logrus.Fields{"source": "verification-svc"})
 
+	mailerCfg := MailerServiceConfig{
+		From:      cfg.Mailer.Username,
+		AppDomain: cfg.Mailer.AppDomain,
+	}
+
 	return &Service{
 		User:               NewUserService(repo.User, cfg.JWT.AccessTokenLifetime.Duration()),
 		Project:            NewProjectService(repo.Project),
@@ -140,6 +146,6 @@ func NewService(
 		UserAuthentication: NewAuthenticationService(cfg, authenticationLogEntry, repo),
 		UserAuthorization:  NewAuthorizationService(cfg, repo),
 		Verification:       NewVerificationService(verificationLogEntry, repo.VerificationCache, generator),
-		Mailer:             mailer,
+		Mailer:             NewMailerService(mailerCfg, mailer),
 	}, nil
 }
