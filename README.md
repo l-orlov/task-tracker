@@ -35,7 +35,7 @@ EMAIL_PASSWORD=some_password
 <a name="deployment"></a>
 ## Развертывание
 1. Для того, чтобы развернуть сервис в docker:  
-```docker-compose up -d```  
+```docker-compose up -d --build```  
 
     Опустить контейнеры:  
 ```docker-compose down```  
